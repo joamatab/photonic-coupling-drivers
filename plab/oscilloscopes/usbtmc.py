@@ -32,44 +32,44 @@ import re
 import sys
 
 # constants
-USBTMC_bInterfaceClass    = 0xFE
+USBTMC_bInterfaceClass = 0xFE
 USBTMC_bInterfaceSubClass = 3
 USBTMC_bInterfaceProtocol = 0
 USB488_bInterfaceProtocol = 1
 
-USBTMC_MSGID_DEV_DEP_MSG_OUT            = 1
-USBTMC_MSGID_REQUEST_DEV_DEP_MSG_IN     = 2
-USBTMC_MSGID_DEV_DEP_MSG_IN             = 2
-USBTMC_MSGID_VENDOR_SPECIFIC_OUT        = 126
+USBTMC_MSGID_DEV_DEP_MSG_OUT = 1
+USBTMC_MSGID_REQUEST_DEV_DEP_MSG_IN = 2
+USBTMC_MSGID_DEV_DEP_MSG_IN = 2
+USBTMC_MSGID_VENDOR_SPECIFIC_OUT = 126
 USBTMC_MSGID_REQUEST_VENDOR_SPECIFIC_IN = 127
-USBTMC_MSGID_VENDOR_SPECIFIC_IN         = 127
-USB488_MSGID_TRIGGER                    = 128
+USBTMC_MSGID_VENDOR_SPECIFIC_IN = 127
+USB488_MSGID_TRIGGER = 128
 
-USBTMC_STATUS_SUCCESS                  = 0x01
-USBTMC_STATUS_PENDING                  = 0x02
-USBTMC_STATUS_FAILED                   = 0x80
+USBTMC_STATUS_SUCCESS = 0x01
+USBTMC_STATUS_PENDING = 0x02
+USBTMC_STATUS_FAILED = 0x80
 USBTMC_STATUS_TRANSFER_NOT_IN_PROGRESS = 0x81
-USBTMC_STATUS_SPLIT_NOT_IN_PROGRESS    = 0x82
-USBTMC_STATUS_SPLIT_IN_PROGRESS        = 0x83
-USB488_STATUS_INTERRUPT_IN_BUSY        = 0x20
+USBTMC_STATUS_SPLIT_NOT_IN_PROGRESS = 0x82
+USBTMC_STATUS_SPLIT_IN_PROGRESS = 0x83
+USB488_STATUS_INTERRUPT_IN_BUSY = 0x20
 
-USBTMC_REQUEST_INITIATE_ABORT_BULK_OUT     = 1
+USBTMC_REQUEST_INITIATE_ABORT_BULK_OUT = 1
 USBTMC_REQUEST_CHECK_ABORT_BULK_OUT_STATUS = 2
-USBTMC_REQUEST_INITIATE_ABORT_BULK_IN      = 3
-USBTMC_REQUEST_CHECK_ABORT_BULK_IN_STATUS  = 4
-USBTMC_REQUEST_INITIATE_CLEAR              = 5
-USBTMC_REQUEST_CHECK_CLEAR_STATUS          = 6
-USBTMC_REQUEST_GET_CAPABILITIES            = 7
-USBTMC_REQUEST_INDICATOR_PULSE             = 64
+USBTMC_REQUEST_INITIATE_ABORT_BULK_IN = 3
+USBTMC_REQUEST_CHECK_ABORT_BULK_IN_STATUS = 4
+USBTMC_REQUEST_INITIATE_CLEAR = 5
+USBTMC_REQUEST_CHECK_CLEAR_STATUS = 6
+USBTMC_REQUEST_GET_CAPABILITIES = 7
+USBTMC_REQUEST_INDICATOR_PULSE = 64
 
 USB488_READ_STATUS_BYTE = 128
-USB488_REN_CONTROL      = 160
-USB488_GOTO_LOCAL       = 161
-USB488_LOCAL_LOCKOUT    = 162
+USB488_REN_CONTROL = 160
+USB488_GOTO_LOCAL = 161
+USB488_LOCAL_LOCKOUT = 162
 
 USBTMC_HEADER_SIZE = 12
 
-RIGOL_QUIRK_PIDS = [0x04ce, 0x0588]
+RIGOL_QUIRK_PIDS = [0x04CE, 0x0588]
 
 
 def parse_visa_resource_string(resource_string):
@@ -78,29 +78,33 @@ def parse_visa_resource_string(resource_string):
     # USB::1234::5678::SERIAL::INSTR
     # USB0::0x1234::0x5678::INSTR
     # USB0::0x1234::0x5678::SERIAL::INSTR
-    m = re.match('^(?P<prefix>(?P<type>USB)\d*)(::(?P<arg1>[^\s:]+))'
-        '(::(?P<arg2>[^\s:]+(\[.+\])?))(::(?P<arg3>[^\s:]+))?'
-        '(::(?P<suffix>INSTR))$', resource_string, re.I)
+    m = re.match(
+        "^(?P<prefix>(?P<type>USB)\d*)(::(?P<arg1>[^\s:]+))"
+        "(::(?P<arg2>[^\s:]+(\[.+\])?))(::(?P<arg3>[^\s:]+))?"
+        "(::(?P<suffix>INSTR))$",
+        resource_string,
+        re.I,
+    )
 
     if m is not None:
         return dict(
-            type=m.group('type').upper(),
-            prefix=m.group('prefix'),
-            arg1=m.group('arg1'),
-            arg2=m.group('arg2'),
-            arg3=m.group('arg3'),
-            suffix=m.group('suffix')
+            type=m.group("type").upper(),
+            prefix=m.group("prefix"),
+            arg1=m.group("arg1"),
+            arg2=m.group("arg2"),
+            arg3=m.group("arg3"),
+            suffix=m.group("suffix"),
         )
 
 
 # Exceptions
 class UsbtmcException(Exception):
-    em = {0:  "No error"}
+    em = {0: "No error"}
 
     def __init__(self, err=None, note=None):
         self.err = err
         self.note = note
-        self.msg = ''
+        self.msg = ""
 
         if err is None:
             self.msg = note
@@ -124,8 +128,11 @@ def list_devices():
 
     def is_usbtmc_device(dev):
         for cfg in dev:
-            d = usb.util.find_descriptor(cfg, bInterfaceClass=USBTMC_bInterfaceClass,
-                                         bInterfaceSubClass=USBTMC_bInterfaceSubClass)
+            d = usb.util.find_descriptor(
+                cfg,
+                bInterfaceClass=USBTMC_bInterfaceClass,
+                bInterfaceSubClass=USBTMC_bInterfaceSubClass,
+            )
             if d is not None:
                 return True
 
@@ -164,7 +171,7 @@ def list_resources():
         if idVendor == 0x0957 and idProduct == 0x4218:
             # Agilent U2722A firmware update mode
             idProduct = 0x4118
-        
+
         if idVendor == 0x0957 and idProduct == 0x4418:
             # Agilent U2723A firmware update mode
             idProduct = 0x4318
@@ -201,7 +208,7 @@ def find_device(idVendor=None, idProduct=None, iSerial=None):
             # Agilent U2701A/U2702A firmware update mode
             if dev.idVendor == idVendor and dev.idProduct == 0x2818:
                 found = True
-        
+
         if idVendor == 0x0957 and idProduct == 0x4118:
             # Agilent U2722A firmware update mode
             if dev.idVendor == idVendor and dev.idProduct == 0x4218:
@@ -218,7 +225,7 @@ def find_device(idVendor=None, idProduct=None, iSerial=None):
         if iSerial is None:
             return dev
         else:
-            s = ''
+            s = ""
 
             # try reading serial number
             try:
@@ -234,6 +241,7 @@ def find_device(idVendor=None, idProduct=None, iSerial=None):
 
 class Instrument(object):
     "USBTMC instrument interface client"
+
     def __init__(self, *args, **kwargs):
         "Create new USBTMC instrument object"
         self.idVendor = 0
@@ -259,7 +267,7 @@ class Instrument(object):
         self.support_RL = False
         self.support_DT = False
 
-        self.max_transfer_size = 1024*1024
+        self.max_transfer_size = 1024 * 1024
 
         self.timeout = 5.0
 
@@ -297,42 +305,42 @@ class Instrument(object):
 
         for op in kwargs:
             val = kwargs[op]
-            if op == 'idVendor':
+            if op == "idVendor":
                 self.idVendor = val
-            elif op == 'idProduct':
+            elif op == "idProduct":
                 self.idProduct = val
-            elif op == 'iSerial':
+            elif op == "iSerial":
                 self.iSerial = val
-            elif op == 'device':
+            elif op == "device":
                 self.device = val
-            elif op == 'dev':
+            elif op == "dev":
                 self.device = val
-            elif op == 'term_char':
+            elif op == "term_char":
                 self.term_char = val
-            elif op == 'resource':
+            elif op == "resource":
                 resource = val
 
         if resource is not None:
             res = parse_visa_resource_string(resource)
 
             if res is None:
-                raise UsbtmcException("Invalid resource string", 'init')
+                raise UsbtmcException("Invalid resource string", "init")
 
-            if res['arg1'] is None and res['arg2'] is None:
-                raise UsbtmcException("Invalid resource string", 'init')
+            if res["arg1"] is None and res["arg2"] is None:
+                raise UsbtmcException("Invalid resource string", "init")
 
-            self.idVendor = int(res['arg1'], 0)
-            self.idProduct = int(res['arg2'], 0)
-            self.iSerial = res['arg3']
+            self.idVendor = int(res["arg1"], 0)
+            self.idProduct = int(res["arg2"], 0)
+            self.iSerial = res["arg3"]
 
         # find device
         if self.device is None:
             if self.idVendor is None or self.idProduct is None:
-                raise UsbtmcException("No device specified", 'init')
+                raise UsbtmcException("No device specified", "init")
             else:
                 self.device = find_device(self.idVendor, self.idProduct, self.iSerial)
                 if self.device is None:
-                    raise UsbtmcException("Device not found", 'init')
+                    raise UsbtmcException("Device not found", "init")
 
     def __del__(self):
         if self.connected:
@@ -353,7 +361,11 @@ class Instrument(object):
 
         # initialize device
 
-        if self.device.idVendor == 0x0957 and self.device.idProduct in [0x2818, 0x4218, 0x4418]:
+        if self.device.idVendor == 0x0957 and self.device.idProduct in [
+            0x2818,
+            0x4218,
+            0x4418,
+        ]:
             # Agilent U27xx modular devices
             # U2701A/U2702A, U2722A/U2723A
             # These devices require a short initialization sequence, presumably
@@ -364,7 +376,7 @@ class Instrument(object):
             # U2701A/U2702A boot 0x2818, usbtmc 0x2918
             # U2722A boot 0x4218, usbtmc 0x4118
             # U2723A boot 0x4418, usbtmc 0x4318
- 
+
             serial = self.device.serial_number
 
             new_id = 0
@@ -372,12 +384,48 @@ class Instrument(object):
             if self.device.idProduct == 0x2818:
                 # U2701A/U2702A
                 new_id = 0x2918
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047E, data_or_wLength=0x0001)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047D, data_or_wLength=0x0006)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x0484, data_or_wLength=0x0005)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x0472, data_or_wLength=0x000C)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047A, data_or_wLength=0x0001)
-                self.device.ctrl_transfer(bmRequestType=0x40, bRequest=0x0C, wValue=0x0000, wIndex=0x0475, data_or_wLength=b'\x00\x00\x01\x01\x00\x00\x08\x01')
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047E,
+                    data_or_wLength=0x0001,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047D,
+                    data_or_wLength=0x0006,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0484,
+                    data_or_wLength=0x0005,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0472,
+                    data_or_wLength=0x000C,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047A,
+                    data_or_wLength=0x0001,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0x40,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0475,
+                    data_or_wLength=b"\x00\x00\x01\x01\x00\x00\x08\x01",
+                )
 
             if self.device.idProduct in [0x4218, 0x4418]:
                 # U2722A/U2723A
@@ -387,12 +435,48 @@ class Instrument(object):
                 elif self.device.idProduct == 0x4418:
                     # U2723A
                     new_id = 0x4318
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047E, data_or_wLength=0x0001)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047D, data_or_wLength=0x0006)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x0487, data_or_wLength=0x0005)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x0472, data_or_wLength=0x000C)
-                self.device.ctrl_transfer(bmRequestType=0xC0, bRequest=0x0C, wValue=0x0000, wIndex=0x047A, data_or_wLength=0x0001)
-                self.device.ctrl_transfer(bmRequestType=0x40, bRequest=0x0C, wValue=0x0000, wIndex=0x0475, data_or_wLength=b'\x00\x00\x01\x01\x00\x00\x08\x01')
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047E,
+                    data_or_wLength=0x0001,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047D,
+                    data_or_wLength=0x0006,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0487,
+                    data_or_wLength=0x0005,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0472,
+                    data_or_wLength=0x000C,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0xC0,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x047A,
+                    data_or_wLength=0x0001,
+                )
+                self.device.ctrl_transfer(
+                    bmRequestType=0x40,
+                    bRequest=0x0C,
+                    wValue=0x0000,
+                    wIndex=0x0475,
+                    data_or_wLength=b"\x00\x00\x01\x01\x00\x00\x08\x01",
+                )
 
             usb.util.dispose_resources(self.device)
             self.device = None
@@ -409,13 +493,15 @@ class Instrument(object):
         # find first USBTMC interface
         for cfg in self.device:
             for iface in cfg:
-                if (iface.bInterfaceClass == USBTMC_bInterfaceClass and
-                    iface.bInterfaceSubClass == USBTMC_bInterfaceSubClass):
+                if (
+                    iface.bInterfaceClass == USBTMC_bInterfaceClass
+                    and iface.bInterfaceSubClass == USBTMC_bInterfaceSubClass
+                ):
                     # USBTMC device
                     self.cfg = cfg
                     self.iface = iface
                     break
-                elif (self.device.idVendor == 0x1334):
+                elif self.device.idVendor == 0x1334:
                     # Advantest
                     self.cfg = cfg
                     self.iface = iface
@@ -425,7 +511,7 @@ class Instrument(object):
             break
 
         if self.iface is None:
-            raise UsbtmcException("Not a USBTMC device", 'init')
+            raise UsbtmcException("Not a USBTMC device", "init")
 
         try:
             self.old_cfg = self.device.get_active_configuration()
@@ -433,7 +519,10 @@ class Instrument(object):
             # ignore exception if configuration is not set
             pass
 
-        if self.old_cfg is not None and self.old_cfg.bConfigurationValue == self.cfg.bConfigurationValue:
+        if (
+            self.old_cfg is not None
+            and self.old_cfg.bConfigurationValue == self.cfg.bConfigurationValue
+        ):
             # already set to correct configuration
 
             # release kernel driver on USBTMC interface
@@ -459,17 +548,17 @@ class Instrument(object):
             ep_dir = usb.util.endpoint_direction(ep.bEndpointAddress)
             ep_type = usb.util.endpoint_type(ep.bmAttributes)
 
-            if (ep_type == usb.util.ENDPOINT_TYPE_BULK):
-                if (ep_dir == usb.util.ENDPOINT_IN):
+            if ep_type == usb.util.ENDPOINT_TYPE_BULK:
+                if ep_dir == usb.util.ENDPOINT_IN:
                     self.bulk_in_ep = ep
-                elif (ep_dir == usb.util.ENDPOINT_OUT):
+                elif ep_dir == usb.util.ENDPOINT_OUT:
                     self.bulk_out_ep = ep
-            elif (ep_type == usb.util.ENDPOINT_TYPE_INTR):
-                if (ep_dir == usb.util.ENDPOINT_IN):
+            elif ep_type == usb.util.ENDPOINT_TYPE_INTR:
+                if ep_dir == usb.util.ENDPOINT_IN:
                     self.interrupt_in_ep = ep
 
         if self.bulk_in_ep is None or self.bulk_out_ep is None:
-            raise UsbtmcException("Invalid endpoint configuration", 'init')
+            raise UsbtmcException("Invalid endpoint configuration", "init")
 
         # set quirk flags if necessary
         if self.device.idVendor == 0x1334:
@@ -478,10 +567,10 @@ class Instrument(object):
             self.max_transfer_size = 63
             self.advantest_quirk = True
 
-        if self.device.idVendor == 0x1ab1 and self.device.idProduct in RIGOL_QUIRK_PIDS:
+        if self.device.idVendor == 0x1AB1 and self.device.idProduct in RIGOL_QUIRK_PIDS:
             self.rigol_quirk = True
 
-            if self.device.idProduct == 0x04ce:
+            if self.device.idProduct == 0x04CE:
                 self.rigol_quirk_ieee_block = True
 
         self.connected = True
@@ -523,13 +612,18 @@ class Instrument(object):
             self.open()
 
         b = self.device.ctrl_transfer(
-              usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_INTERFACE),
-              USBTMC_REQUEST_GET_CAPABILITIES,
-              0x0000,
-              self.iface.index,
-              0x0018,
-              timeout=self._timeout_ms)
-        if (b[0] == USBTMC_STATUS_SUCCESS):
+            usb.util.build_request_type(
+                usb.util.CTRL_IN,
+                usb.util.CTRL_TYPE_CLASS,
+                usb.util.CTRL_RECIPIENT_INTERFACE,
+            ),
+            USBTMC_REQUEST_GET_CAPABILITIES,
+            0x0000,
+            self.iface.index,
+            0x0018,
+            timeout=self._timeout_ms,
+        )
+        if b[0] == USBTMC_STATUS_SUCCESS:
             self.bcdUSBTMC = (b[3] << 8) + b[2]
             self.support_pulse = b[4] & 4 != 0
             self.support_talk_only = b[4] & 2 != 0
@@ -546,7 +640,7 @@ class Instrument(object):
                 self.support_RL = b[4] & 2 != 0
                 self.support_DT = b[4] & 1 != 0
         else:
-            raise UsbtmcException("Get capabilities failed", 'get_capabilities')
+            raise UsbtmcException("Get capabilities failed", "get_capabilities")
 
     def pulse(self):
         """
@@ -558,25 +652,30 @@ class Instrument(object):
 
         if self.support_pulse:
             b = self.device.ctrl_transfer(
-                  usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_INTERFACE),
-                  USBTMC_REQUEST_INDICATOR_PULSE,
-                  0x0000,
-                  self.iface.index,
-                  0x0001,
-                  timeout=self._timeout_ms)
-            if (b[0] != USBTMC_STATUS_SUCCESS):
-                raise UsbtmcException("Pulse failed", 'pulse')
+                usb.util.build_request_type(
+                    usb.util.CTRL_IN,
+                    usb.util.CTRL_TYPE_CLASS,
+                    usb.util.CTRL_RECIPIENT_INTERFACE,
+                ),
+                USBTMC_REQUEST_INDICATOR_PULSE,
+                0x0000,
+                self.iface.index,
+                0x0001,
+                timeout=self._timeout_ms,
+            )
+            if b[0] != USBTMC_STATUS_SUCCESS:
+                raise UsbtmcException("Pulse failed", "pulse")
 
     # message header management
     def pack_bulk_out_header(self, msgid):
         self.last_btag = btag = (self.last_btag % 255) + 1
-        return struct.pack('BBBx', msgid, btag, ~btag & 0xFF)
+        return struct.pack("BBBx", msgid, btag, ~btag & 0xFF)
 
-    def pack_dev_dep_msg_out_header(self, transfer_size, eom = True):
+    def pack_dev_dep_msg_out_header(self, transfer_size, eom=True):
         hdr = self.pack_bulk_out_header(USBTMC_MSGID_DEV_DEP_MSG_OUT)
-        return hdr+struct.pack("<LBxxx", transfer_size, eom)
+        return hdr + struct.pack("<LBxxx", transfer_size, eom)
 
-    def pack_dev_dep_msg_in_header(self, transfer_size, term_char = None):
+    def pack_dev_dep_msg_in_header(self, transfer_size, term_char=None):
         hdr = self.pack_bulk_out_header(USBTMC_MSGID_DEV_DEP_MSG_IN)
         transfer_attributes = 0
         if term_char is None:
@@ -584,28 +683,30 @@ class Instrument(object):
         else:
             transfer_attributes = 2
             term_char = self.term_char
-        return hdr+struct.pack("<LBBxx", transfer_size, transfer_attributes, term_char)
+        return hdr + struct.pack(
+            "<LBBxx", transfer_size, transfer_attributes, term_char
+        )
 
     def pack_vendor_specific_out_header(self, transfer_size):
         hdr = self.pack_bulk_out_header(USBTMC_MSGID_VENDOR_SPECIFIC_OUT)
-        return hdr+struct.pack("<Lxxxx", transfer_size)
+        return hdr + struct.pack("<Lxxxx", transfer_size)
 
     def pack_vendor_specific_in_header(self, transfer_size):
         hdr = self.pack_bulk_out_header(USBTMC_MSGID_VENDOR_SPECIFIC_IN)
-        return hdr+struct.pack("<Lxxxx", transfer_size)
+        return hdr + struct.pack("<Lxxxx", transfer_size)
 
     def pack_usb488_trigger(self):
         hdr = self.pack_bulk_out_header(USB488_MSGID_TRIGGER)
-        return hdr+b'\x00'*8
+        return hdr + b"\x00" * 8
 
     def unpack_bulk_in_header(self, data):
-        msgid, btag, btaginverse = struct.unpack_from('BBBx', data)
+        msgid, btag, btaginverse = struct.unpack_from("BBBx", data)
         return (msgid, btag, btaginverse)
 
     def unpack_dev_dep_resp_header(self, data):
         msgid, btag, btaginverse = self.unpack_bulk_in_header(data)
-        transfer_size, transfer_attributes = struct.unpack_from('<LBxxx', data, 4)
-        data = data[USBTMC_HEADER_SIZE:transfer_size+USBTMC_HEADER_SIZE]
+        transfer_size, transfer_attributes = struct.unpack_from("<LBxxx", data, 4)
+        data = data[USBTMC_HEADER_SIZE : transfer_size + USBTMC_HEADER_SIZE]
         return (msgid, btag, btaginverse, transfer_size, transfer_attributes, data)
 
     def write_raw(self, data):
@@ -625,10 +726,14 @@ class Instrument(object):
                 if num <= self.max_transfer_size:
                     eom = True
 
-                block = data[offset:offset+self.max_transfer_size]
+                block = data[offset : offset + self.max_transfer_size]
                 size = len(block)
 
-                req = self.pack_dev_dep_msg_out_header(size, eom) + block + b'\0'*((4 - (size % 4)) % 4)
+                req = (
+                    self.pack_dev_dep_msg_out_header(size, eom)
+                    + block
+                    + b"\0" * ((4 - (size % 4)) % 4)
+                )
                 self.bulk_out_ep.write(req, timeout=self._timeout_ms)
 
                 offset += size
@@ -657,11 +762,11 @@ class Instrument(object):
         if self.term_char is not None:
             term_char = self.term_char
 
-        read_data = b''
+        read_data = b""
 
         try:
             while not eom:
-                if not self.rigol_quirk or read_data == b'':
+                if not self.rigol_quirk or read_data == b"":
 
                     # if the rigol sees this again, it will restart the transfer
                     # so only send it the first time
@@ -669,7 +774,9 @@ class Instrument(object):
                     req = self.pack_dev_dep_msg_in_header(read_len, term_char)
                     self.bulk_out_ep.write(req, timeout=self._timeout_ms)
 
-                resp = self.bulk_in_ep.read(read_len+USBTMC_HEADER_SIZE+3, timeout=self._timeout_ms)
+                resp = self.bulk_in_ep.read(
+                    read_len + USBTMC_HEADER_SIZE + 3, timeout=self._timeout_ms
+                )
 
                 if sys.version_info >= (3, 2):
                     resp = resp.tobytes()
@@ -677,10 +784,16 @@ class Instrument(object):
                     resp = resp.tostring()
 
                 if self.rigol_quirk and read_data:
-                    pass # do nothing, the packet has no header if it isn't the first
+                    pass  # do nothing, the packet has no header if it isn't the first
                 else:
-                    msgid, btag, btaginverse, transfer_size, transfer_attributes, data = self.unpack_dev_dep_resp_header(resp) 
-
+                    (
+                        msgid,
+                        btag,
+                        btaginverse,
+                        transfer_size,
+                        transfer_attributes,
+                        data,
+                    ) = self.unpack_dev_dep_resp_header(resp)
 
                 if self.rigol_quirk:
                     # rigol devices only send the header in the first packet, and they lie about whether the transaction is complete
@@ -691,14 +804,16 @@ class Instrument(object):
 
                             # ieee block incoming, the transfer_size usbtmc header is lying about the transaction size
                             l = int(chr(data[1]))
-                            n = int(data[2:l+2])
+                            n = int(data[2 : l + 2])
 
-                            transfer_size = n + (l+2)  # account for ieee header
+                            transfer_size = n + (l + 2)  # account for ieee header
 
                         read_data += data
 
                     if len(read_data) >= transfer_size:
-                        read_data = read_data[:transfer_size]  # as per usbtmc spec section 3.2 note 2
+                        read_data = read_data[
+                            :transfer_size
+                        ]  # as per usbtmc spec section 3.2 note 2
                         eom = True
                     else:
                         eom = False
@@ -738,7 +853,7 @@ class Instrument(object):
             if self.advantest_quirk and not was_locked:
                 self.unlock()
 
-    def write(self, message, encoding='utf-8'):
+    def write(self, message, encoding="utf-8"):
         "Write string to instrument"
         if type(message) is tuple or type(message) is list:
             # recursive call for a list of commands
@@ -748,11 +863,11 @@ class Instrument(object):
 
         self.write_raw(str(message).encode(encoding))
 
-    def read(self, num=-1, encoding='utf-8'):
+    def read(self, num=-1, encoding="utf-8"):
         "Read string from instrument"
-        return self.read_raw(num).decode(encoding).rstrip('\r\n')
+        return self.read_raw(num).decode(encoding).rstrip("\r\n")
 
-    def ask(self, message, num=-1, encoding='utf-8'):
+    def ask(self, message, num=-1, encoding="utf-8"):
         "Write then read string"
         if type(message) is tuple or type(message) is list:
             # recursive call for a list of commands
@@ -785,17 +900,21 @@ class Instrument(object):
             self.last_rstb_btag = rstb_btag
 
             b = self.device.ctrl_transfer(
-                bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_INTERFACE),
+                bmRequestType=usb.util.build_request_type(
+                    usb.util.CTRL_IN,
+                    usb.util.CTRL_TYPE_CLASS,
+                    usb.util.CTRL_RECIPIENT_INTERFACE,
+                ),
                 bRequest=USB488_READ_STATUS_BYTE,
                 wValue=rstb_btag,
                 wIndex=self.iface.index,
                 data_or_wLength=0x0003,
-                timeout=self._timeout_ms
+                timeout=self._timeout_ms,
             )
-            if (b[0] == USBTMC_STATUS_SUCCESS):
+            if b[0] == USBTMC_STATUS_SUCCESS:
                 # check btag
                 if rstb_btag != b[1]:
-                    raise UsbtmcException("Read status byte btag mismatch", 'read_stb')
+                    raise UsbtmcException("Read status byte btag mismatch", "read_stb")
                 if self.interrupt_in_ep is None:
                     # no interrupt channel, value is here
                     return b[2]
@@ -803,11 +922,13 @@ class Instrument(object):
                     # read response from interrupt channel
                     resp = self.interrupt_in_ep.read(2, timeout=self._timeout_ms)
                     if resp[0] != rstb_btag + 128:
-                        raise UsbtmcException("Read status byte btag mismatch", 'read_stb')
+                        raise UsbtmcException(
+                            "Read status byte btag mismatch", "read_stb"
+                        )
                     else:
                         return resp[1]
             else:
-                raise UsbtmcException("Read status failed", 'read_stb')
+                raise UsbtmcException("Read status failed", "read_stb")
         else:
             return int(self.ask("*STB?"))
 
@@ -832,32 +953,40 @@ class Instrument(object):
 
         # Send INITIATE_CLEAR
         b = self.device.ctrl_transfer(
-            bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_INTERFACE),
+            bmRequestType=usb.util.build_request_type(
+                usb.util.CTRL_IN,
+                usb.util.CTRL_TYPE_CLASS,
+                usb.util.CTRL_RECIPIENT_INTERFACE,
+            ),
             bRequest=USBTMC_REQUEST_INITIATE_CLEAR,
             wValue=0x0000,
             wIndex=self.iface.index,
             data_or_wLength=0x0001,
-            timeout=self._timeout_ms
+            timeout=self._timeout_ms,
         )
-        if (b[0] == USBTMC_STATUS_SUCCESS):
+        if b[0] == USBTMC_STATUS_SUCCESS:
             # Initiate clear succeeded, wait for completion
             while True:
                 # Check status
                 b = self.device.ctrl_transfer(
-                    bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_INTERFACE),
+                    bmRequestType=usb.util.build_request_type(
+                        usb.util.CTRL_IN,
+                        usb.util.CTRL_TYPE_CLASS,
+                        usb.util.CTRL_RECIPIENT_INTERFACE,
+                    ),
                     bRequest=USBTMC_REQUEST_CHECK_CLEAR_STATUS,
                     wValue=0x0000,
                     wIndex=self.iface.index,
                     data_or_wLength=0x0002,
-                    timeout=self._timeout_ms
+                    timeout=self._timeout_ms,
                 )
                 time.sleep(0.1)
-                if (b[0] != USBTMC_STATUS_PENDING):
+                if b[0] != USBTMC_STATUS_PENDING:
                     break
             # Clear halt condition
             self.bulk_out_ep.clear_halt()
         else:
-            raise UsbtmcException("Clear failed", 'clear')
+            raise UsbtmcException("Clear failed", "clear")
 
     def _abort_bulk_out(self, btag=None):
         "Abort bulk out"
@@ -870,27 +999,35 @@ class Instrument(object):
 
         # Send INITIATE_ABORT_BULK_OUT
         b = self.device.ctrl_transfer(
-            bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_ENDPOINT),
+            bmRequestType=usb.util.build_request_type(
+                usb.util.CTRL_IN,
+                usb.util.CTRL_TYPE_CLASS,
+                usb.util.CTRL_RECIPIENT_ENDPOINT,
+            ),
             bRequest=USBTMC_REQUEST_INITIATE_ABORT_BULK_OUT,
             wValue=btag,
             wIndex=self.bulk_out_ep.bEndpointAddress,
             data_or_wLength=0x0002,
-            timeout=self._timeout_ms
+            timeout=self._timeout_ms,
         )
-        if (b[0] == USBTMC_STATUS_SUCCESS):
+        if b[0] == USBTMC_STATUS_SUCCESS:
             # Initiate abort bulk out succeeded, wait for completion
             while True:
                 # Check status
                 b = self.device.ctrl_transfer(
-                    bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_ENDPOINT),
+                    bmRequestType=usb.util.build_request_type(
+                        usb.util.CTRL_IN,
+                        usb.util.CTRL_TYPE_CLASS,
+                        usb.util.CTRL_RECIPIENT_ENDPOINT,
+                    ),
                     bRequest=USBTMC_REQUEST_CHECK_ABORT_BULK_OUT_STATUS,
                     wValue=0x0000,
                     wIndex=self.bulk_out_ep.bEndpointAddress,
                     data_or_wLength=0x0008,
-                    timeout=self._timeout_ms
+                    timeout=self._timeout_ms,
                 )
                 time.sleep(0.1)
-                if (b[0] != USBTMC_STATUS_PENDING):
+                if b[0] != USBTMC_STATUS_PENDING:
                     break
         else:
             # no transfer in progress; nothing to do
@@ -907,27 +1044,35 @@ class Instrument(object):
 
         # Send INITIATE_ABORT_BULK_IN
         b = self.device.ctrl_transfer(
-            bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_ENDPOINT),
+            bmRequestType=usb.util.build_request_type(
+                usb.util.CTRL_IN,
+                usb.util.CTRL_TYPE_CLASS,
+                usb.util.CTRL_RECIPIENT_ENDPOINT,
+            ),
             bRequest=USBTMC_REQUEST_INITIATE_ABORT_BULK_IN,
             wValue=btag,
             wIndex=self.bulk_in_ep.bEndpointAddress,
             data_or_wLength=0x0002,
-            timeout=self._timeout_ms
+            timeout=self._timeout_ms,
         )
-        if (b[0] == USBTMC_STATUS_SUCCESS):
+        if b[0] == USBTMC_STATUS_SUCCESS:
             # Initiate abort bulk in succeeded, wait for completion
             while True:
                 # Check status
                 b = self.device.ctrl_transfer(
-                    bmRequestType=usb.util.build_request_type(usb.util.CTRL_IN, usb.util.CTRL_TYPE_CLASS, usb.util.CTRL_RECIPIENT_ENDPOINT),
+                    bmRequestType=usb.util.build_request_type(
+                        usb.util.CTRL_IN,
+                        usb.util.CTRL_TYPE_CLASS,
+                        usb.util.CTRL_RECIPIENT_ENDPOINT,
+                    ),
                     bRequest=USBTMC_REQUEST_CHECK_ABORT_BULK_IN_STATUS,
                     wValue=0x0000,
                     wIndex=self.bulk_in_ep.bEndpointAddress,
                     data_or_wLength=0x0008,
-                    timeout=self._timeout_ms
+                    timeout=self._timeout_ms,
                 )
                 time.sleep(0.1)
-                if (b[0] != USBTMC_STATUS_PENDING):
+                if b[0] != USBTMC_STATUS_PENDING:
                     break
         else:
             # no transfer in progress; nothing to do
@@ -951,7 +1096,13 @@ class Instrument(object):
             # This Advantest/ADCMT vendor-specific control command enables remote control and must be sent before any commands are exchanged
             # (otherwise READ commands will only retrieve the latest measurement)
             self.advantest_locked = True
-            self.device.ctrl_transfer(bmRequestType=0xA1, bRequest=0xA0, wValue=0x0001, wIndex=0x0000, data_or_wLength=1)
+            self.device.ctrl_transfer(
+                bmRequestType=0xA1,
+                bRequest=0xA0,
+                wValue=0x0001,
+                wIndex=0x0000,
+                data_or_wLength=1,
+            )
         else:
             raise NotImplementedError()
 
@@ -965,7 +1116,13 @@ class Instrument(object):
             # This Advantest/ADCMT vendor-specific control command enables remote control and must be sent before any commands are exchanged
             # (otherwise READ commands will only retrieve the latest measurement)
             self.advantest_locked = False
-            self.device.ctrl_transfer(bmRequestType=0xA1, bRequest=0xA0, wValue=0x0000, wIndex=0x0000, data_or_wLength=1)
+            self.device.ctrl_transfer(
+                bmRequestType=0xA1,
+                bRequest=0xA0,
+                wValue=0x0000,
+                wIndex=0x0000,
+                data_or_wLength=1,
+            )
         else:
             raise NotImplementedError()
 
@@ -978,19 +1135,29 @@ class Instrument(object):
         if self.advantest_quirk:
             # This Advantest/ADCMT vendor-specific control command reads the "MyID" identifier
             try:
-                return int(self.device.ctrl_transfer(bmRequestType=0xC1, bRequest=0xF5, wValue=0x0000, wIndex=0x0000, data_or_wLength=1)[0])
+                return int(
+                    self.device.ctrl_transfer(
+                        bmRequestType=0xC1,
+                        bRequest=0xF5,
+                        wValue=0x0000,
+                        wIndex=0x0000,
+                        data_or_wLength=1,
+                    )[0]
+                )
             except:
                 return None
         else:
             raise NotImplementedError()
 
     def _release_kernel_driver(self, interface_number):
-        if os.name == 'posix':
+        if os.name == "posix":
             if self.device.is_kernel_driver_active(interface_number):
                 self.reattach.append(interface_number)
                 try:
                     self.device.detach_kernel_driver(interface_number)
                 except usb.core.USBError as e:
                     sys.exit(
-                        "Could not detach kernel driver from interface({0}): {1}".format(interface_number,
-                                                                                         str(e)))
+                        "Could not detach kernel driver from interface({0}): {1}".format(
+                            interface_number, str(e)
+                        )
+                    )

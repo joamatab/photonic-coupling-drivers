@@ -5,110 +5,112 @@ from scipy import interpolate
 from tqdm import tqdm
 import time
 
+
 class Laser(object, metaclass=abc.ABCMeta):
-    '''
+    """
     Abstract base interface class for lasers.
 
     All laser drivers should derive from this class
     and call `super.__init__(...)` in their constructor.
-    '''
+    """
+
     @abc.abstractmethod
     def turn_on(self):
-        '''Turns the laser on.
+        """Turns the laser on.
 
         Returns:
             bool: `True` if the laser is on, `False` if the laser is off.
                 (Should be `True`.)
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def turn_off(self):
-        '''Turns the laser off.
+        """Turns the laser off.
 
         Returns:
             bool: `True` if the laser is off, `False` if the laser is on.
                 (Should be `False`.)
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def get_on_or_off(self):
-        '''Checks if the laser is on or off.
+        """Checks if the laser is on or off.
 
         Returns:
             bool: `True` if the laser is off, `False` if the laser is on.
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def set_power_W(self, power_W):
-        '''Sets the power of the laser in [W].
+        """Sets the power of the laser in [W].
 
         Args:
             power_W (int, float): power in [W] to set the laser to.
 
         Returns:
             float: The power of the laser.
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def get_power_W(self):
-        '''Gets the power of the laser in [W].
+        """Gets the power of the laser in [W].
 
         Returns:
             float: The power of the laser in [W].
-        '''
+        """
         pass
 
     @staticmethod
     def dbm_to_watts(power_dbm):
-        '''Converts [dBm] to [W].
+        """Converts [dBm] to [W].
 
         Args:
             power_dbm (int, float): Power in [dBm].
 
         Returns:
             float: Power in [W].
-        '''
-        power_W = 10.**(power_dbm/10.) / 1.e3
+        """
+        power_W = 10.0 ** (power_dbm / 10.0) / 1.0e3
         return power_W
 
     @staticmethod
     def watts_to_dbm(power_W):
-        '''Converts [W] to [dBm].
+        """Converts [W] to [dBm].
 
         Args:
             power_W (int, float): Power in [W].
 
         Returns:
             float: Power in [dBm].
-        '''
-        power_dbm = 10.*math.log10(power_W/1.e-3)
+        """
+        power_dbm = 10.0 * math.log10(power_W / 1.0e-3)
         return power_dbm
 
     def set_power_mW(self, power_mW):
-        return self.set_power_W(power_mW * 1.e-3) * 1.e3
+        return self.set_power_W(power_mW * 1.0e-3) * 1.0e3
 
     def set_power_uW(self, power_uW):
-        return self.set_power_W(power_uW * 1.e-6) * 1.e6
+        return self.set_power_W(power_uW * 1.0e-6) * 1.0e6
 
     def set_power_dbm(self, power_dbm):
         power_W = self.dbm_to_watts(power_dbm)
         return self.set_power_W(power_W)
 
     def get_power_mW(self):
-        return self.get_power_W()* 1.e3
+        return self.get_power_W() * 1.0e3
 
     def get_power_uW(self):
-        return self.get_power_W() * 1.e6
+        return self.get_power_W() * 1.0e6
 
     def get_power_nW(self):
-        return self.get_power_W() * 1.e9
+        return self.get_power_W() * 1.0e9
 
     def get_power_pW(self):
-        return self.get_power_W() * 1.e12
+        return self.get_power_W() * 1.0e12
 
     def get_power_dbm(self):
         return self.watts_to_dbm(self.get_power_W())
@@ -117,7 +119,7 @@ class Laser(object, metaclass=abc.ABCMeta):
 class LaserTunable(Laser, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def set_wavelength_m(self, wavelength_m):
-        '''Sets the wavelength in [m] of the laser.
+        """Sets the wavelength in [m] of the laser.
 
         Args:
             wavelength_m (int, float): The wavelength in metres to
@@ -125,16 +127,16 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
 
         Returns:
             float: The wavelength in metres the laser was set to.
-        '''
+        """
         pass
 
     @abc.abstractmethod
     def get_wavelength_m(self):
-        '''Gets the wavelength in [m] of the laser.
+        """Gets the wavelength in [m] of the laser.
 
         Returns:
             float: The wavelength in metres the laser is set to.
-        '''
+        """
         pass
 
     @abc.abstractmethod
@@ -146,27 +148,33 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
         pass
 
     def set_wavelength_um(self, wavelength):
-        return self.set_wavelength_m(wavelength * 1.e-3) * 1.e3
+        return self.set_wavelength_m(wavelength * 1.0e-3) * 1.0e3
 
     def set_wavelength_um(self, wavelength):
-        return self.set_wavelength_m(wavelength * 1.e-6) * 1.e6
+        return self.set_wavelength_m(wavelength * 1.0e-6) * 1.0e6
 
     def set_wavelength_nm(self, wavelength):
-        return self.set_wavelength_m(wavelength * 1.e-9) * 1.e9
+        return self.set_wavelength_m(wavelength * 1.0e-9) * 1.0e9
 
     def get_wavelength_mm(self):
-        return self.get_wavelength_m() * 1.e3
+        return self.get_wavelength_m() * 1.0e3
 
     def get_wavelength_um(self):
-        return self.get_wavelength_m() * 1.e6
+        return self.get_wavelength_m() * 1.0e6
 
     def get_wavelength_nm(self):
-        return self.get_wavelength_m() * 1.e9
+        return self.get_wavelength_m() * 1.0e9
 
-    def get_wavelength_power_scan_manual(self, start_wavelength_nm, stop_wavelength_nm,
-                                         step_wavelength_nm, power_meters=None,
-                                         delay_wavelength_changes_s=1., filename=None):
-        '''
+    def get_wavelength_power_scan_manual(
+        self,
+        start_wavelength_nm,
+        stop_wavelength_nm,
+        step_wavelength_nm,
+        power_meters=None,
+        delay_wavelength_changes_s=1.0,
+        filename=None,
+    ):
+        """
         Performs a wavelength sweep.
 
         Manually changes the laser power and the measures.  Does not use the in-built sweep
@@ -190,13 +198,15 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
             list: The first item is a float list of the wavelengths swept.  Subsequent
                 items in the list are power meter readings given in the same order as in
                 `power_meters.`
-        '''
+        """
 
         if filename:
-            fs = open(filename, 'w')
+            fs = open(filename, "w")
 
         # Wavelengths to measure.
-        wavelengths_nm = np.arange(start_wavelength_nm, stop_wavelength_nm, step_wavelength_nm)
+        wavelengths_nm = np.arange(
+            start_wavelength_nm, stop_wavelength_nm, step_wavelength_nm
+        )
 
         # Convert parameters of power_meters.
         try:
@@ -210,7 +220,7 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
 
         # Set power meters to average wavelength in scan.
         for pm in power_meters:
-            pm.set_wavelength_nm(0.5*(start_wavelength_nm+stop_wavelength_nm))
+            pm.set_wavelength_nm(0.5 * (start_wavelength_nm + stop_wavelength_nm))
 
         # Turn laser on.
         self.turn_on()
@@ -227,10 +237,10 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
             if filename:
                 w_p = [w]
                 w_p.extend(p)
-                s = ','.join([str(v) for v in w_p])
-                fs.write(s+'\n')
+                s = ",".join([str(v) for v in w_p])
+                fs.write(s + "\n")
 
-            progress_bar.set_description('Power: %0.3e' % p[0])
+            progress_bar.set_description("Power: %0.3e" % p[0])
 
         # Turn laser off.
         self.turn_off()
@@ -250,19 +260,22 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
 
         return r
 
-    def wavelength_sweep_manual_interp(self,
-                                       start_wavelength_nm,
-                                       stop_wavelength_nm,
-                                       step_wavelength_nm,
-                                       power_meters,
-                                       delay_wavelength_changes_s=1.,
-                                       filename=None):
+    def wavelength_sweep_manual_interp(
+        self,
+        start_wavelength_nm,
+        stop_wavelength_nm,
+        step_wavelength_nm,
+        power_meters,
+        delay_wavelength_changes_s=1.0,
+        filename=None,
+    ):
         wavelengths, powers = self.get_wavelength_power_scan_manual(
-                                                    start_wavelength_nm,
-                                                    stop_wavelength_nm,
-                                                    step_wavelength_nm,
-                                                    power_meters,
-                                                    delay_wavelength_changes_s=1.,
-                                                    filename=None)
+            start_wavelength_nm,
+            stop_wavelength_nm,
+            step_wavelength_nm,
+            power_meters,
+            delay_wavelength_changes_s=1.0,
+            filename=None,
+        )
         powers_interp = interpolate.interp1d(wavelengths, powers)
         return powers_interp

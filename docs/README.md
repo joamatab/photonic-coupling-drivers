@@ -7,4 +7,3 @@ photonics lab drivers
 ## Installation
 
 `make install`
-

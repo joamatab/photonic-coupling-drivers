@@ -13,12 +13,14 @@ def _unique(seq):
     seen = set()
     return [seen.add(x) or x for x in seq if x not in seen]
 
+
 class ScannerDesign:
-    '''
+    """
     A list-style object containing a group of `scan` objects.
 
     Supports performing various nested scans and chains of scans.
-    '''
+    """
+
     def __init__(self):
         self._get_pos_list = []
         self._set_pos_list = []
@@ -27,7 +29,7 @@ class ScannerDesign:
         self._scan_types = deque()
 
     def _add(self, scans):
-        '''
+        """
         Adds a list of `scan` objects.  When `scan(...)`
         is called, all scans in the list will be run
         sequentially, and, if specified, the stages will
@@ -35,16 +37,16 @@ class ScannerDesign:
 
         Args:
             scans(list(Scan)): List of `scan` objects.
-        '''
+        """
         self._steps.append((scans, None))
-        self._scan_types.append('scans')
+        self._scan_types.append("scans")
 
         for scan in scans:
             self._get_pos_list_add(scan._get_pos_funcs)
             self._set_pos_list_add(scan._move_funcs)
 
     def _add_nested(self, nested_scan, outer_scan):
-        '''
+        """
         Adds a nested scan step.  The nested scan
         performs the `nested_scan` scan in the
         `outer_scan` scan.
@@ -52,9 +54,9 @@ class ScannerDesign:
         Args:
             nested_scan(Scan): The nested scan.
             outer_scan(Scan): The outer scan.
-        '''
+        """
         self._steps.append((nested_scan, outer_scan))
-        self._scan_types.append('nested')
+        self._scan_types.append("nested")
 
         self._get_pos_list_add(nested_scan._get_pos_funcs)
         self._set_pos_list_add(nested_scan._move_funcs)
@@ -62,7 +64,7 @@ class ScannerDesign:
         self._set_pos_list_add(outer_scan._move_funcs)
 
     def _add_nested_each_max(self, nested_scans, outer_scan):
-        '''
+        """
         Adds a nested scan step that goes to max after
         each nested scan scan.
 
@@ -70,9 +72,9 @@ class ScannerDesign:
             nested_scans(list(Scans)): A list of the nested
                 scans.
             outer_scan(Scan): The outer scan.
-        '''
+        """
         self._steps.append((nested_scans, outer_scan))
-        self._scan_types.append('nested_goto_max')
+        self._scan_types.append("nested_goto_max")
 
         for nested_scan in nested_scans:
             self._get_pos_list_add(nested_scan._get_pos_funcs)
@@ -127,8 +129,9 @@ class ScannerDesign:
                 s.offsets = []
 
         # Do scan.
-        coords_for_each, coords_pows = outer_scan.traverse_pattern(scan.scan,
-            kwargs={'goto_max': False})
+        coords_for_each, coords_pows = outer_scan.traverse_pattern(
+            scan.scan, kwargs={"goto_max": False}
+        )
         print()
 
         # Sort all coords from both scans.
@@ -137,7 +140,7 @@ class ScannerDesign:
             for c, p in zip(coord_pow[0][0], coord_pow[0][1]):
                 comb = (coord_for_each, c, p)
                 coords_sorted.append(comb)
-        coords_sorted_T =  np.array(coords_sorted).T
+        coords_sorted_T = np.array(coords_sorted).T
         idx_max_pow = np.argmax(coords_sorted_T[2])
 
         # Determine the max power coordinates, and the max power.
@@ -172,6 +175,7 @@ class ScannerDesign:
         # Do scan.
         max_pow_pos = []
         max_pows = []
+
         def scan_all():
             for scan in scans:
                 _, coord_max_pow = scan.scan(goto_max=True)
@@ -195,11 +199,11 @@ class ScannerDesign:
 
     def scan(self, goto_max=True):
         for (scans, outer_scan), scan_type in zip(self._steps, self._scan_types):
-            if scan_type == 'nested':
+            if scan_type == "nested":
                 res = self._scan_nested(scans, outer_scan, goto_max)
-            elif scan_type == 'nested_goto_max':
+            elif scan_type == "nested_goto_max":
                 res = self._scan_nested_each_max(scans, outer_scan, goto_max)
-            elif scan_type == 'scans':
+            elif scan_type == "scans":
                 res = self._scan(scans, goto_max)
             else:
                 assert False
@@ -207,41 +211,50 @@ class ScannerDesign:
         return res
 
     def __str__(self):
-        recipe = ''
+        recipe = ""
 
         for i, scans_loop in enumerate(self._steps):
             scan = scans_loop[0]
             loop = scans_loop[1]
-            step_str = 'STEP %i:  ' % i
-            scan_str = '    SCAN  '
-            join_str = '\n' + ' '*len(scan_str) + '   THEN  '
-            scan_str += join_str.join([scan.__class__.__name__ + ' USING ' +
-                                      ','.join([axis.__class__.__name__ for axis in scan.axes])])
+            step_str = "STEP %i:  " % i
+            scan_str = "    SCAN  "
+            join_str = "\n" + " " * len(scan_str) + "   THEN  "
+            scan_str += join_str.join(
+                [
+                    scan.__class__.__name__
+                    + " USING "
+                    + ",".join([axis.__class__.__name__ for axis in scan.axes])
+                ]
+            )
 
             if loop:
-                loop_str = '\n' + ' '*len(step_str) + 'FOR EACH  '
-                loop_str += loop.__class__.__name__ + ' USING ' + \
-                            ','.join([axis.__class__.__name__ for axis in loop.axes])
+                loop_str = "\n" + " " * len(step_str) + "FOR EACH  "
+                loop_str += (
+                    loop.__class__.__name__
+                    + " USING "
+                    + ",".join([axis.__class__.__name__ for axis in loop.axes])
+                )
             else:
-                loop_str = ''
+                loop_str = ""
 
-            recipe += step_str + scan_str + ' ' + loop_str + '\n'
+            recipe += step_str + scan_str + " " + loop_str + "\n"
 
         return recipe
 
 
 class Scan(metaclass=abc.ABCMeta):
-    '''
+    """
     The general interface a `scan` should adhere to.
 
     A scan object consists of a set of axes, a pattern function
     defining the path of the axes, as well as a power meter.
-    '''
+    """
+
     def __init__(self, axes, power_meter, offsets=[], *args, **kwargs):
         for axis in axes:
             assert issubclass(type(axis), st.Axis) or not axis
 
-        assert len(offsets) in (0, len(axes)), 'Incorrect offset length.'
+        assert len(offsets) in (0, len(axes)), "Incorrect offset length."
         self.offsets = np.array(offsets)
 
         self.axes = axes
@@ -261,18 +274,26 @@ class Scan(metaclass=abc.ABCMeta):
             if issubclass(type(axis), st.AxisLinear):
                 self._move_funcs.append(axis.move_abs_um)
                 self._get_pos_funcs.append(axis.get_current_position_um)
-                self._min_max.append((axis.get_position_absolute_min_um(),
-                                      axis.get_position_absolute_max_um()))
+                self._min_max.append(
+                    (
+                        axis.get_position_absolute_min_um(),
+                        axis.get_position_absolute_max_um(),
+                    )
+                )
             elif issubclass(type(axis), st.AxisRotate):
                 self._move_funcs.append(axis.move_abs_degree)
                 self._get_pos_funcs.append(axis.get_current_position_degree)
-                self._min_max.append((axis.get_position_absolute_min_degree(),
-                                      axis.get_position_absolute_max_degree()))
+                self._min_max.append(
+                    (
+                        axis.get_position_absolute_min_degree(),
+                        axis.get_position_absolute_max_degree(),
+                    )
+                )
 
     @staticmethod
     @abc.abstractmethod
     def _pattern(*args, **kwargs):
-        '''
+        """
         An implementation of the pattern that will be swept.
 
         All the arguments passed to the constructor captured
@@ -284,11 +305,11 @@ class Scan(metaclass=abc.ABCMeta):
                 coordinates should be absolute (not relative)
                 movements, were (0,0) is the assumed origin of
                 the coordinates.
-        '''
+        """
         pass
 
     def traverse_pattern(self, func=None, args=[], kwargs={}):
-        '''
+        """
         Sequentially move the stages to each point in the pattern
         returned by `_pattern()`, calling `func(*args, **kwargs)`
         at each point.
@@ -302,7 +323,7 @@ class Scan(metaclass=abc.ABCMeta):
             (list, list): The first list is a flattened version
                 of the pattern coordinates, and the second list
                 contains the results of calling func.
-        '''
+        """
         # Backup and set xy axis speeds.
         _luminos_xy_speeds = deque()
         _luminos_xy_accel = deque()
@@ -319,15 +340,17 @@ class Scan(metaclass=abc.ABCMeta):
         if len(self.offsets):
             axes_pos += self.offsets
 
-        coords = np.array([coord+axes_pos for coord in self.pattern_flat])
+        coords = np.array([coord + axes_pos for coord in self.pattern_flat])
 
         for (min, max), coords_axis, axis in zip(self._min_max, coords.T, self.axes):
-            assert np.all(min <= coords_axis), \
-                'Pattern exceeds %s-axis minimum range.' % axis.name
-            assert np.all(coords_axis <= max), \
-                'Pattern exceeds %s-axis maximum range.' % axis.name
+            assert np.all(min <= coords_axis), (
+                "Pattern exceeds %s-axis minimum range." % axis.name
+            )
+            assert np.all(coords_axis <= max), (
+                "Pattern exceeds %s-axis maximum range." % axis.name
+            )
 
-        results = [None]*coords.shape[0]
+        results = [None] * coords.shape[0]
         for i, coord in enumerate(tqdm.tqdm(coords, ncols=80)):
             self._move_abs(coord)
             if func:
@@ -342,7 +365,7 @@ class Scan(metaclass=abc.ABCMeta):
         return coords, results
 
     def scan(self, goto_max=True):
-        '''
+        """
         Traverse the pattern returned by `_pattern()` and
         measure the power at each point.
 
@@ -358,7 +381,7 @@ class Scan(metaclass=abc.ABCMeta):
                 the second list contains power readings.  The 2-tuple
                 are the (x,y) coordinates of the maximum power of the
                 scan, and the float is the maximum power.
-        '''
+        """
         # Store initial position.
         pos_init = np.array([get_pos() for get_pos in self._get_pos_funcs])
 
@@ -377,7 +400,7 @@ class Scan(metaclass=abc.ABCMeta):
         return (coords, powers), coord_max_power
 
     def _move_abs(self, coord):
-        #assert len(coord) == self.dimensions
+        # assert len(coord) == self.dimensions
         for point, move_abs in zip(coord, self._move_funcs):
             move_abs(point)
 
@@ -386,55 +409,88 @@ class Scan(metaclass=abc.ABCMeta):
         return coords[idx], powers[idx]
 
     def __str__(self):
-        return self.__class__.__name__ + ': dim ' + str(self.dimensions) \
-            + '; axes ' + ','.join([axis.__class__.__name__ for axis in self.axes])
+        return (
+            self.__class__.__name__
+            + ": dim "
+            + str(self.dimensions)
+            + "; axes "
+            + ",".join([axis.__class__.__name__ for axis in self.axes])
+        )
 
 
 class Rectangle(Scan):
-    '''
+    """
     A two-dimensional `scan` in a rectangular shape along `axis_1` and
     `axis_2`.
-    '''
-    def __init__(self, axis_1, axis_2, power_meter,
-                 axis_1_pts, axis_2_pts, axis_1_step, axis_2_step,
-                 offset=(0,0), meander=True, origin='c'):
+    """
+
+    def __init__(
+        self,
+        axis_1,
+        axis_2,
+        power_meter,
+        axis_1_pts,
+        axis_2_pts,
+        axis_1_step,
+        axis_2_step,
+        offset=(0, 0),
+        meander=True,
+        origin="c",
+    ):
         axes = [axis_1, axis_2]
-        Scan.__init__(self, axes, power_meter, offset,
-                      axis_1_pts, axis_2_pts,
-                      axis_1_step, axis_2_step,
-                      meander, origin)
+        Scan.__init__(
+            self,
+            axes,
+            power_meter,
+            offset,
+            axis_1_pts,
+            axis_2_pts,
+            axis_1_step,
+            axis_2_step,
+            meander,
+            origin,
+        )
 
     def scan(self, goto_max=False, plot=False):
         r = Scan.scan(self, goto_max)
         (coords, powers), _ = r
         if plot:
-            np.savetxt(plot, np.c_[self.pattern_flat.T[0], self.pattern_flat.T[1], powers], '%.6e', ',')
+            np.savetxt(
+                plot,
+                np.c_[self.pattern_flat.T[0], self.pattern_flat.T[1], powers],
+                "%.6e",
+                ",",
+            )
             root, _ = os.path.splitext(plot)
-            filename_png = root + '.png'
+            filename_png = root + ".png"
             plot_args = {
-                'filename': plot,
-                'filename_png': filename_png,
-                'axis_1': self.axes[0].name,
-                'axis_2': self.axes[1].name
+                "filename": plot,
+                "filename_png": filename_png,
+                "axis_1": self.axes[0].name,
+                "axis_2": self.axes[1].name,
             }
             path = os.path.abspath(__file__)
             dir_path = os.path.dirname(path)
-            gp.Gnuplot(dir_path + '/scanner.gpi', plot_args)
-            os.system('display %s' % filename_png)
+            gp.Gnuplot(dir_path + "/scanner.gpi", plot_args)
+            os.system("display %s" % filename_png)
         return r
 
     @staticmethod
     def _pattern(axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander, *args):
         pts = []
         coord = [None, None]
-        axis_1_dist = (axis_1_pts-1) * axis_1_step
-        axis_2_dist = (axis_2_pts-1) * axis_2_step
+        axis_1_dist = (axis_1_pts - 1) * axis_1_step
+        axis_2_dist = (axis_2_pts - 1) * axis_2_step
         parity = False
-        for n_2 in np.arange(-axis_2_dist/2, (axis_2_dist+0.1*axis_2_step)/2, axis_2_step):
+        for n_2 in np.arange(
+            -axis_2_dist / 2, (axis_2_dist + 0.1 * axis_2_step) / 2, axis_2_step
+        ):
             parity ^= 1
             row = []
             coord[1] = n_2
-            for n_1 in np.arange(-axis_1_dist/2, (axis_1_dist+0.1*axis_1_step)/2, axis_1_step):
+            for n_1 in np.arange(
+                -axis_1_dist / 2, (axis_1_dist + 0.1 * axis_1_step) / 2, axis_1_step
+            ):
                 coord[0] = n_1
                 row.append(np.array(coord))
             if parity and meander:
@@ -445,64 +501,83 @@ class Rectangle(Scan):
         return np.array(pts)
 
     @staticmethod
-    def plot(pattern, filename='pattern.dat'):
+    def plot(pattern, filename="pattern.dat"):
         flat_shape = (np.product(pattern.shape[:-1]), pattern.shape[-1])
         pattern_flat = np.copy(pattern).reshape(flat_shape)
         np.savetxt(filename, pattern_flat)
         filename_image, _ = os.path.splitext(filename)
-        filename_image += '.png'
-        args = {
-            'filename': filename,
-            'filename_image': filename_image
-        }
+        filename_image += ".png"
+        args = {"filename": filename, "filename_image": filename_image}
 
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        gp.Gnuplot(dir_path+'/pattern.gpi', args)
+        gp.Gnuplot(dir_path + "/pattern.gpi", args)
 
 
 class RectangleXY(Rectangle):
-    def __init__(self, stage, power_meter, x_pts, y_pts, x_step, y_step,
-                 offset=(0,0), meander=True, origin='c'):
-        axis_1 = stage.axes['x']
-        axis_2 = stage.axes['y']
-        Rectangle.__init__(self, axis_1, axis_2, power_meter,
-                           y_pts, x_pts, y_step, x_step,
-                           offset, meander, origin)
+    def __init__(
+        self,
+        stage,
+        power_meter,
+        x_pts,
+        y_pts,
+        x_step,
+        y_step,
+        offset=(0, 0),
+        meander=True,
+        origin="c",
+    ):
+        axis_1 = stage.axes["x"]
+        axis_2 = stage.axes["y"]
+        Rectangle.__init__(
+            self,
+            axis_1,
+            axis_2,
+            power_meter,
+            y_pts,
+            x_pts,
+            y_step,
+            x_step,
+            offset,
+            meander,
+            origin,
+        )
 
     @staticmethod
     def _pattern(axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander, origin):
-        pts = Rectangle._pattern(axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander)
+        pts = Rectangle._pattern(
+            axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander
+        )
         ref = RectangleXY._set_origin(pts, origin)
         pts += ref
         return pts
 
     @staticmethod
     def _set_origin(pts, origin):
-        assert origin in ('c', 'lm', 'rm', 'tm', 'bm', 'tl', 'tr', 'bl', 'br')
-        if origin == 'c':
-            ref = (0,0)
-        elif origin == 'tl':
+        assert origin in ("c", "lm", "rm", "tm", "bm", "tl", "tr", "bl", "br")
+        if origin == "c":
+            ref = (0, 0)
+        elif origin == "tl":
             ref = pts[0][-1]
-        elif origin == 'tr':
+        elif origin == "tr":
             ref = pts[-1][-1]
-        elif origin == 'bl':
+        elif origin == "bl":
             ref = pts[0][0]
-        elif origin == 'br':
+        elif origin == "br":
             ref = pts[-1][0]
-        elif origin == 'tm':
+        elif origin == "tm":
             ref_x = 0
             ref_y = pts[0][-1][1]
             ref = (ref_x, ref_y)
-        elif origin == 'bm':
+        elif origin == "bm":
             ref_x = 0
             ref_y = pts[0][0][1]
             ref = (ref_x, ref_y)
-        elif origin == 'lm':
+        elif origin == "lm":
             ref_x = pts[0][-1][0]
             ref_y = 0
             ref = (ref_x, ref_y)
-        elif origin == 'rm':
+        elif origin == "rm":
             ref_x = pts[-1][0][0]
             ref_y = 0
             ref = (ref_x, ref_y)
@@ -510,98 +585,174 @@ class RectangleXY(Rectangle):
 
 
 class Diamond(Rectangle):
-    def __init__(self, axis_1, axis_2, power_meter,
-                 axis_1_pts, axis_2_pts, axis_1_step, axis_2_step,
-                 offset=(0,0), meander=True, origin='c'):
-        Rectangle.__init__(axis_1, axis_2, power_meter,
-                           axis_1_pts, axis_2_pts, axis_1_step, axis_2_step,
-                           offset=(0,0), meander=True, origin='c')
+    def __init__(
+        self,
+        axis_1,
+        axis_2,
+        power_meter,
+        axis_1_pts,
+        axis_2_pts,
+        axis_1_step,
+        axis_2_step,
+        offset=(0, 0),
+        meander=True,
+        origin="c",
+    ):
+        Rectangle.__init__(
+            axis_1,
+            axis_2,
+            power_meter,
+            axis_1_pts,
+            axis_2_pts,
+            axis_1_step,
+            axis_2_step,
+            offset=(0, 0),
+            meander=True,
+            origin="c",
+        )
 
     @staticmethod
-    def _pattern(axis_1_pts, axis_2_pts,
-                 axis_1_step, axis_2_step,
-                 meander):
-        pattern = Rectangle._pattern(axis_1_pts, axis_2_pts,
-                                     axis_1_step, axis_2_step,
-                                     meander)
-        t = np.array([[np.cos(np.pi/4),-np.sin(np.pi/4)],
-                      [np.sin(np.pi/4),np.cos(np.pi/4)]])
+    def _pattern(axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander):
+        pattern = Rectangle._pattern(
+            axis_1_pts, axis_2_pts, axis_1_step, axis_2_step, meander
+        )
+        t = np.array(
+            [
+                [np.cos(np.pi / 4), -np.sin(np.pi / 4)],
+                [np.sin(np.pi / 4), np.cos(np.pi / 4)],
+            ]
+        )
         return np.dot(pattern, t)
 
 
 class Line(Scan):
-    def __init__(self, axis, power_meter, axis_pts, axis_step, origin='c'):
+    def __init__(self, axis, power_meter, axis_pts, axis_step, origin="c"):
         self.origin = origin
         Scan.__init__(self, [axis], power_meter, [], axis_pts, axis_step, origin)
 
     @staticmethod
-    def _pattern(axis_pts, axis_step, origin='c'):
-        pts = np.arange(0., axis_pts*axis_step, axis_step)
-        if origin == 'c':
-            pts -= pts[-1]/2
-        elif origin == 'r':
+    def _pattern(axis_pts, axis_step, origin="c"):
+        pts = np.arange(0.0, axis_pts * axis_step, axis_step)
+        if origin == "c":
+            pts -= pts[-1] / 2
+        elif origin == "r":
             pts -= pts[-1]
-        elif origin == 'l':
+        elif origin == "l":
             pass
         pts = np.array([[p] for p in pts])
         return pts
 
 
 class OptimiseRectZ(ScannerDesign):
-    def __init__(self, power_meter,
-                 stage,
-                 axis_x_pts, axis_y_pts, axis_z_pts,
-                 axis_x_step, axis_y_step, axis_z_step,
-                 offset=(0,0)):
+    def __init__(
+        self,
+        power_meter,
+        stage,
+        axis_x_pts,
+        axis_y_pts,
+        axis_z_pts,
+        axis_x_step,
+        axis_y_step,
+        axis_z_step,
+        offset=(0, 0),
+    ):
         ScannerDesign.__init__(self)
 
         # Always step backwards in z.
         if axis_z_step >= 0:
             axis_z_step = -axis_z_step
 
-        rect = Rectangle(stage.x, stage.y, power_meter, axis_x_pts,
-                         axis_y_pts, axis_x_step, axis_y_step, offset)
-        lz = Line(stage.z, power_meter, axis_z_pts, axis_z_step, 'l')
+        rect = Rectangle(
+            stage.x,
+            stage.y,
+            power_meter,
+            axis_x_pts,
+            axis_y_pts,
+            axis_x_step,
+            axis_y_step,
+            offset,
+        )
+        lz = Line(stage.z, power_meter, axis_z_pts, axis_z_step, "l")
 
         self._add_nested(rect, lz)
 
 
 class Cross(Scan):
-    def __init__(self, axis_1, axis_2, power_meter,
-                 axis_1_pts, axis_2_pts, axis_1_step, axis_2_step,
-                 offset=(0,0)):
-        Scan.__init__(self, [axis_1, axis_2,], power_meter, offset,
-                      axis_1_pts, axis_2_pts, axis_1_step, axis_2_step)
-
+    def __init__(
+        self,
+        axis_1,
+        axis_2,
+        power_meter,
+        axis_1_pts,
+        axis_2_pts,
+        axis_1_step,
+        axis_2_step,
+        offset=(0, 0),
+    ):
+        Scan.__init__(
+            self,
+            [
+                axis_1,
+                axis_2,
+            ],
+            power_meter,
+            offset,
+            axis_1_pts,
+            axis_2_pts,
+            axis_1_step,
+            axis_2_step,
+        )
 
     @staticmethod
     def _pattern(axis_1_pts, axis_2_pts, axis_1_step, axis_2_step):
-        l1 = Line._pattern(axis_1_pts, axis_1_step, 'c')
+        l1 = Line._pattern(axis_1_pts, axis_1_step, "c")
         l1 = np.concatenate((l1.T, [np.zeros(l1.size)])).T
-        l2 = Line._pattern(axis_2_pts, axis_2_step, 'c')
+        l2 = Line._pattern(axis_2_pts, axis_2_step, "c")
         l2 = np.concatenate(([np.zeros(l2.size)], l2.T)).T
         pts = np.concatenate((l1, l2))
         return pts
 
     @staticmethod
-    def plot(pattern, filename='pattern.dat'):
+    def plot(pattern, filename="pattern.dat"):
         return Rectangle.plot(pattern, filename)
 
 
 class CrossXY(Cross):
-    def __init__(self, stage, power_meter, axis_x_pts,
-                 axis_y_pts, axis_x_step, axis_y_step,
-                 offset=(0,0)):
-        Cross.__init__(self, stage.x, stage.z, power_meter,
-                       axis_x_pts, axis_y_pts,
-                       axis_x_step, axis_y_step,
-                       offset)
+    def __init__(
+        self,
+        stage,
+        power_meter,
+        axis_x_pts,
+        axis_y_pts,
+        axis_x_step,
+        axis_y_step,
+        offset=(0, 0),
+    ):
+        Cross.__init__(
+            self,
+            stage.x,
+            stage.z,
+            power_meter,
+            axis_x_pts,
+            axis_y_pts,
+            axis_x_step,
+            axis_y_step,
+            offset,
+        )
 
 
 class Line2(ScannerDesign):
-    def __init__(self, axis_1, axis_2, power_meter, axis_1_pts,
-                 axis_2_pts, axis_1_step, axis_2_step):
-        origin = 'c'
+    def __init__(
+        self,
+        axis_1,
+        axis_2,
+        power_meter,
+        axis_1_pts,
+        axis_2_pts,
+        axis_1_step,
+        axis_2_step,
+    ):
+        origin = "c"
 
         lx = Line(axis_1, power_meter, axis_1_pts, axis_1_step, origin)
         ly = Line(axis_2, power_meter, axis_2_pts, axis_2_step, origin)
@@ -612,21 +763,34 @@ class Line2(ScannerDesign):
 
 
 class OptimiseLine2XY_Z(ScannerDesign):
-    def __init__(self, power_meter,
-                 stage,
-                 axis_x_pts, axis_y_pts, axis_z_pts,
-                 axis_x_step, axis_y_step, axis_z_step,
-                 offset=(0,0)):
+    def __init__(
+        self,
+        power_meter,
+        stage,
+        axis_x_pts,
+        axis_y_pts,
+        axis_z_pts,
+        axis_x_step,
+        axis_y_step,
+        axis_z_step,
+        offset=(0, 0),
+    ):
         ScannerDesign.__init__(self)
 
         # Always step backwards in z.
         if axis_z_step >= 0:
             axis_z_step = -axis_z_step
 
-        line2 = Line2(stage.x, stage.y, power_meter,
-                      axis_x_pts, axis_y_pts,
-                      axis_x_step, axis_y_step)
-        lz = Line(stage.z, power_meter, axis_z_pts, axis_z_step, 'l')
+        line2 = Line2(
+            stage.x,
+            stage.y,
+            power_meter,
+            axis_x_pts,
+            axis_y_pts,
+            axis_x_step,
+            axis_y_step,
+        )
+        lz = Line(stage.z, power_meter, axis_z_pts, axis_z_step, "l")
 
         ns = [step[0][0] for step in line2._steps]
         self._add_nested_each_max(ns, lz)
@@ -638,24 +802,41 @@ class ScanRoutines(object):
         self.out = stages.output
         self.pm = power_meter
 
-    def _take_image(self, stage, x_pts, y_pts, x_step_um, y_step_um,
-                    filename=None, goto_max=False, meander=False):
-        r = RectangleXY(stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, (0,0), meander, 'c')
-        pos_pows =  r.scan(goto_max, filename)
+    def _take_image(
+        self,
+        stage,
+        x_pts,
+        y_pts,
+        x_step_um,
+        y_step_um,
+        filename=None,
+        goto_max=False,
+        meander=False,
+    ):
+        r = RectangleXY(
+            stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, (0, 0), meander, "c"
+        )
+        pos_pows = r.scan(goto_max, filename)
         return pos_pows
 
-    def take_image_input(self, x_pts, y_pts, x_step_um, y_step_um,
-                         filename='input.dat', goto_max=False):
-        return self._take_image(self.inp, x_pts, y_pts, x_step_um, y_step_um,
-                                filename, goto_max, False)
+    def take_image_input(
+        self, x_pts, y_pts, x_step_um, y_step_um, filename="input.dat", goto_max=False
+    ):
+        return self._take_image(
+            self.inp, x_pts, y_pts, x_step_um, y_step_um, filename, goto_max, False
+        )
 
-    def take_image_output(self, x_pts, y_pts, x_step_um, y_step_um,
-                          filename='output.dat', goto_max=False):
-        return self._take_image(self.out, x_pts, y_pts, x_step_um, y_step_um,
-                                filename, goto_max, False)
+    def take_image_output(
+        self, x_pts, y_pts, x_step_um, y_step_um, filename="output.dat", goto_max=False
+    ):
+        return self._take_image(
+            self.out, x_pts, y_pts, x_step_um, y_step_um, filename, goto_max, False
+        )
 
     def _goto_max_rect(self, stage, x_pts, y_pts, x_step_um, y_step_um):
-        c = RectangleXY(stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, meander=False)
+        c = RectangleXY(
+            stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, meander=False
+        )
         pos_pows = c.scan(True)
         return pos_pows
 
@@ -676,31 +857,51 @@ class ScanRoutines(object):
     def goto_max_line2XY_output(self, x_pts, y_pts, x_step_um, y_step_um):
         return self._goto_max_line2XY(self.out, x_pts, y_pts, x_step_um, y_step_um)
 
-    def _goto_max_line2XY_z(self, stage, x_pts, y_pts, z_pts, x_step_um,
-                          y_step_um, z_step_um):
-        o = OptimiseLine2XY_Z(self.pm, stage, x_pts, y_pts, z_pts,
-                              x_step_um, y_step_um, z_step_um)
+    def _goto_max_line2XY_z(
+        self, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        o = OptimiseLine2XY_Z(
+            self.pm, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
         pos_pows = o.scan(True)
         return pos_pows
 
-    def goto_max_line2XY_z_input(self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um):
-        return self._goto_max_line2XY_z(self.inp, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um)
+    def goto_max_line2XY_z_input(
+        self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        return self._goto_max_line2XY_z(
+            self.inp, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
 
-    def goto_max_line2XY_z_output(self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um):
-        return self._goto_max_line2XY_z(self.out, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um)
+    def goto_max_line2XY_z_output(
+        self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        return self._goto_max_line2XY_z(
+            self.out, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
 
-    def _goto_max_rect_z(self, stage, x_pts, y_pts, z_pts, x_step_um,
-                          y_step_um, z_step_um):
-        o = OptimiseRectZ(self.pm, stage, x_pts, y_pts, z_pts,
-                          x_step_um, y_step_um, z_step_um)
+    def _goto_max_rect_z(
+        self, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        o = OptimiseRectZ(
+            self.pm, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
         pos_pows = o.scan(True)
         return pos_pows
 
-    def goto_max_rect_z_input(self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um):
-        return self._goto_max_rect_z(self.inp, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um)
+    def goto_max_rect_z_input(
+        self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        return self._goto_max_rect_z(
+            self.inp, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
 
-    def goto_max_rect_z_output(self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um):
-        return self._goto_max_rect_z(self.out, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um)
+    def goto_max_rect_z_output(
+        self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+    ):
+        return self._goto_max_rect_z(
+            self.out, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
+        )
 
     def _goto_max_cross(self, stage, x_pts, y_pts, x_step_um, y_step_um):
         c = CrossXY(stage, self.pm, x_pts, y_pts, x_step, y_step)
@@ -713,26 +914,24 @@ class ScanRoutines(object):
     def goto_max_cross_output(self, x_pts, y_pts, x_step_um, y_step_um):
         return self._goto_max_cross(self.out, x_pts, y_pts, x_step_um, y_step_um)
 
-    def find_waveguide_rect(self, x_pts=7, y_pts=7, x_step_um=1, y_step_um=1,
-                            offset=(0,-3)):
-        r_inp = RectangleXY(self.inp, self.pm,
-                            x_pts, y_pts, x_step_um, y_step_um,
-                            offset, True, 'c')
-        r_out = RectangleXY(self.out, self.pm,
-                            x_pts, y_pts, x_step_um, y_step_um,
-                            offset, True, 'c')
+    def find_waveguide_rect(
+        self, x_pts=7, y_pts=7, x_step_um=1, y_step_um=1, offset=(0, -3)
+    ):
+        r_inp = RectangleXY(
+            self.inp, self.pm, x_pts, y_pts, x_step_um, y_step_um, offset, True, "c"
+        )
+        r_out = RectangleXY(
+            self.out, self.pm, x_pts, y_pts, x_step_um, y_step_um, offset, True, "c"
+        )
         sd = ScannerDesign()
         sd._add_nested(r_out, r_inp)
         return sd.scan(True)
 
-    def find_waveguide_cross(self, x_pts=7, y_pts=7, x_step_um=3, y_step_um=3,
-                            offset=(0,-3)):
-        r_inp = CrossXY(self.inp, self.pm,
-                        x_pts, y_pts, x_step_um, y_step_um,
-                        offset)
-        r_out = CrossXY(self.out, self.pm,
-                        x_pts, y_pts, x_step_um, y_step_um,
-                        offset)
+    def find_waveguide_cross(
+        self, x_pts=7, y_pts=7, x_step_um=3, y_step_um=3, offset=(0, -3)
+    ):
+        r_inp = CrossXY(self.inp, self.pm, x_pts, y_pts, x_step_um, y_step_um, offset)
+        r_out = CrossXY(self.out, self.pm, x_pts, y_pts, x_step_um, y_step_um, offset)
         sd = ScannerDesign()
         sd._add_nested(r_out, r_inp)
         return sd.scan(True)

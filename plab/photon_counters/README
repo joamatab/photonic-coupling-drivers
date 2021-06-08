@@ -5,4 +5,3 @@ manufacturer libraries via Python's ctypes module.
 
 The Python class should work under Windows and
 Linux, and Python 3 as well as Python 2.7.
-

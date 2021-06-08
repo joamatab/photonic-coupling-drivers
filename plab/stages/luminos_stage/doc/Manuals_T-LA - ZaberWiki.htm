@@ -34,7 +34,7 @@ mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.
 <div id="globalWrapper">
 <div id="column-content"><div id="content">
 	<a id="top"></a>
-	
+
 	<h1 id="firstHeading" class="firstHeading"><span dir="auto">Manuals/T-LA</span></h1>
 	<div id="bodyContent" class="mw-body">
 		<div id="siteSub">From ZaberWiki</div>
@@ -166,14 +166,14 @@ mw.loader.load(["mediawiki.page.startup","mediawiki.legacy.wikibits","mediawiki.
 <h2> <span class="mw-headline" id="Installation"> Installation </span></h2>
 <h3> <span class="mw-headline" id="Connection_to_a_Computer"> Connection to a Computer </span></h3>
 <p>Connect the device to a computer as follows:
-</p><p>1. Either plug the Mini-DIN to D-Sub serial adaptor (<a rel="nofollow" class="external text" href="http://www.zaber.com/products/product_accessories.php?detail=T-DSUB9">T-DSUB9</a>) into your computer’s serial port, or the Mini-DIN to USB adapter (<a rel="nofollow" class="external text" href="http://www.zaber.com/products/product_accessories.php?detail=T-USBDC">T-USBDC</a>) into one of your computer's USB ports, then plug the device’s data cable into the adaptor. For the USB adaptor, new computers will often be able to install the necessary drivers automatically when the cable is plugged in for the first time. If the computer reports that the driver installation was unsuccessful, you can download the drivers for Windows, Mac, or Linux <a rel="nofollow" class="external text" href="http://www.ftdichip.com/Drivers/VCP.htm">here</a>. Installation instructions and troubleshooting information are available for each operation system  <a rel="nofollow" class="external text" href="http://www.ftdichip.com/Support/Documents/InstallGuides.htm">here</a>. You may need to use a cable extension to reach your computer. There is no need to power-down or reboot the computer. 
+</p><p>1. Either plug the Mini-DIN to D-Sub serial adaptor (<a rel="nofollow" class="external text" href="http://www.zaber.com/products/product_accessories.php?detail=T-DSUB9">T-DSUB9</a>) into your computer’s serial port, or the Mini-DIN to USB adapter (<a rel="nofollow" class="external text" href="http://www.zaber.com/products/product_accessories.php?detail=T-USBDC">T-USBDC</a>) into one of your computer's USB ports, then plug the device’s data cable into the adaptor. For the USB adaptor, new computers will often be able to install the necessary drivers automatically when the cable is plugged in for the first time. If the computer reports that the driver installation was unsuccessful, you can download the drivers for Windows, Mac, or Linux <a rel="nofollow" class="external text" href="http://www.ftdichip.com/Drivers/VCP.htm">here</a>. Installation instructions and troubleshooting information are available for each operation system  <a rel="nofollow" class="external text" href="http://www.ftdichip.com/Support/Documents/InstallGuides.htm">here</a>. You may need to use a cable extension to reach your computer. There is no need to power-down or reboot the computer.
 </p><p>2. Connect the power plug of your power supply to the power connector of the device (figure 2). If present, the green LED should light up indicating the device has power (some devices may not have LEDs).<br />
 </p><p>3. If your device comes with a knob for manually adjusting the actuator's position, set the knob to the neutral position between forward and backward.  At this point, you will feel a slight detent and the yellow light (if present) will turn off. For the device to receive computer commands, the manual knob must be in the neutral position.<br />
 </p><p>4. Additional devices can simply be daisy-chained to the first (figure 3). For long chains of devices that daisy chain power, a power supply should be connected at every 2nd or 3rd device. A renumber command needs to be issued after a new device is connected, before it can be controlled independently.
 <br />
 </p><p>5. Install software from <a rel="nofollow" class="external free" href="http://www.zaber.com/wiki/Software">http://www.zaber.com/wiki/Software</a> (figure 4). We recommend installing the Zaber Console to get started. As a simple first test, try entering these instructions:
 </p>
-<pre>Renumber all devices                - Device: 0, Cmd:  2, Data: 0 
+<pre>Renumber all devices                - Device: 0, Cmd:  2, Data: 0
 Home device 1                       - Device: 1, Cmd:  1, Data: 0
 Move device 1 to 10,000 microsteps  - Device: 1, Cmd: 20, Data: 10000
 </pre>
@@ -271,8 +271,8 @@ Move device 1 to 10,000 microsteps  - Device: 1, Cmd: 20, Data: 10000
 </p>
 <h3> <span class="mw-headline" id="Connecting_Vacuum_Compatible_Devices">Connecting Vacuum Compatible Devices</span></h3>
 <p>These Zaber products are available in a vacuum compatible version. Vacuum compatible devices (identifiable by the suffix “-V” in the part number) have special requirements for their connection to a computer.
-</p><p><b>Power:</b> No power connectors are provided on vacuum compatible devices. Instead, power must be supplied through the data cable lines. A special serial adapter with power input is provided. 
-</p><p><b>Data Cables:</b> Vacuum compatible devices use the same mini-din data cable extensions as our standard devices; however, the cable jacket is stripped back to the connectors to expose the individual wires. The mini-din connectors are left attached to facilitate easy testing. In your final application you can cut the wires and splice them to a feed-through on your vacuum chamber. Communication lines can be wired back to the appropriate mini-din connector outside your vacuum chamber. Power lines can be wired to any appropriate power supply. See the table below for pinouts. If you have multiple units inside the same vacuum chamber you may connect them using the attached mini-din connectors, or for improved vacuum compatibility you may remove the connectors and permanently wire the units together. 
+</p><p><b>Power:</b> No power connectors are provided on vacuum compatible devices. Instead, power must be supplied through the data cable lines. A special serial adapter with power input is provided.
+</p><p><b>Data Cables:</b> Vacuum compatible devices use the same mini-din data cable extensions as our standard devices; however, the cable jacket is stripped back to the connectors to expose the individual wires. The mini-din connectors are left attached to facilitate easy testing. In your final application you can cut the wires and splice them to a feed-through on your vacuum chamber. Communication lines can be wired back to the appropriate mini-din connector outside your vacuum chamber. Power lines can be wired to any appropriate power supply. See the table below for pinouts. If you have multiple units inside the same vacuum chamber you may connect them using the attached mini-din connectors, or for improved vacuum compatibility you may remove the connectors and permanently wire the units together.
 </p><p><b>Grounding:</b> When re-wiring Zaber devices it is important to wire the ground to both the computer and the power supply (see diagram below).  Alternately, the T-DSUB9-P vacuum adaptor can be substituted into an order to make this connection.
 </p><p><br />
 <a href="/wiki/File:Vacuum_connection_guide.gif" class="image"><img alt="Vacuum connection guide.gif" src="/w/images/d/dd/Vacuum_connection_guide.gif" width="375" height="450" /></a>
@@ -290,7 +290,7 @@ Move device 1 to 10,000 microsteps  - Device: 1, Cmd: 20, Data: 10000
 </p>
 <h2> <span class="mw-headline" id="Control_Through_The_RS-232_Serial_Port">Control Through The RS-232 Serial Port</span></h2>
 <p>All T-Series devices use the same RS232 communications protocol. Your communications settings must be: 9600 baud, no hand shaking, 8 data bits, no parity, one stop bit. The yellow LED will light when there is activity on the RS232 lines.  You may use this feature to determine which COM port you are connected to. We recommend using the <a href="/wiki/Software/Zaber_Console" title="Software/Zaber Console">Zaber Console</a> that you can download from our web site. The source code is also available for you to use as an example for writing your own custom code. See the troubleshooting section later in this manual if you have trouble communicating with the device.
-</p><p><b>Important:</b> The first time you connect a device to your computer you must issue a renumber instruction to assign each device a unique identifier. This should be done after all the devices in the daisy-chain are powered up. In older firmware versions (prior to version 5xx) you must issue a renumber instruction after each powerup. In firmware 5xx and up, the device number is stored in non-volatile memory and will persist after powerdown, so you need only issue the renumber instruction when you add new devices to the chain, or rearrange the order of the devices, however it does no harm to issue the renumber instruction after every powerup. You must not transmit any instructions while the chain is renumbering or the renumbering routine may be corrupted.  Renumbering takes less than a second, after which you may start issuing instructions over the RS232 connection. 
+</p><p><b>Important:</b> The first time you connect a device to your computer you must issue a renumber instruction to assign each device a unique identifier. This should be done after all the devices in the daisy-chain are powered up. In older firmware versions (prior to version 5xx) you must issue a renumber instruction after each powerup. In firmware 5xx and up, the device number is stored in non-volatile memory and will persist after powerdown, so you need only issue the renumber instruction when you add new devices to the chain, or rearrange the order of the devices, however it does no harm to issue the renumber instruction after every powerup. You must not transmit any instructions while the chain is renumbering or the renumbering routine may be corrupted.  Renumbering takes less than a second, after which you may start issuing instructions over the RS232 connection.
 </p><p>All instructions consist of a group of 6 bytes.  They must be transmitted with less than 10 ms between each byte.  If the device has received less than 6 bytes and then a period longer than 10 ms passes, it ignores the bytes already received.  We recommend that your software behave similarly when receiving data from the devices, especially in a noisy environment like a pulsed laser lab.
 </p><p>The following table shows the instruction format:
 </p>
@@ -784,7 +784,7 @@ If Rpl_Byte_6 &gt; 127 then Reply_Data = Reply_Data - 256^4                     
 </p><p><br />
 </p>
 <h2> <span class="mw-headline" id="Detailed_Command_Reference"> Detailed Command Reference </span></h2>
-<p>This command reference applies only to firmware version 5.00 and up to the most recent version. The version of firmware installed on any Zaber T-Series device can be determined by issuing <a href="#Return_Firmware_Version_-_Cmd_51"> command #51</a>. A three-digit number will be returned. Assume 2 decimal places (ex a reply of 293 indicates firmware version 2.93). For earlier versions of firmware, please consult the appropriate PDF user's manual: 
+<p>This command reference applies only to firmware version 5.00 and up to the most recent version. The version of firmware installed on any Zaber T-Series device can be determined by issuing <a href="#Return_Firmware_Version_-_Cmd_51"> command #51</a>. A three-digit number will be returned. Assume 2 decimal places (ex a reply of 293 indicates firmware version 2.93). For earlier versions of firmware, please consult the appropriate PDF user's manual:
 </p>
 <dl><dd> T-Series Manual 2xx (<a rel="nofollow" class="external text" href="http://www.zaber.com/documents/ZaberT-SeriesProductsUsersManual2.xx.pdf">PDF</a>)
 </dd><dd> T-Series Manual 4xx (<a rel="nofollow" class="external text" href="http://www.zaber.com/documents/ZaberT-SeriesProductsUsersManual4.xx.pdf">PDF</a>)
@@ -960,7 +960,7 @@ If Rpl_Byte_6 &gt; 127 then Reply_Data = Reply_Data - 256^4                     
 If the device runs into zero position or maximum range, the device stops and the new position is returned via reply-only command #9.
 </p><p>This command may pre-empt, or be pre-empted by commands <a href="#Move_To_Stored_Position_-_Cmd_18">18</a>, <a href="#Move_Absolute_-_Cmd_20">20</a>, <a href="#Move_Relative_-_Cmd_21">21</a>, <a href="#Move_At_Constant_Speed_-_Cmd_22">22</a> and <a href="#Stop_-_Cmd_23">23</a>.
 </p><p>For a spreadsheet that can be used to calculate speed setting values for any product see <a rel="nofollow" class="external free" href="http://www.zaber.com/documents/ZaberSpeedSetting.xls">http://www.zaber.com/documents/ZaberSpeedSetting.xls</a>. Alternatively you may use the formulas below.
-</p><p>Actual Speed 
+</p><p>Actual Speed
 </p>
 <dl><dd>   = Data * 9.375 * M             mm/s  or  deg/s
 </dd><dd>   = Data * 9.375                 microsteps/s
@@ -971,7 +971,7 @@ If the device runs into zero position or maximum range, the device stops and the
 <p>where:
 </p>
 <ul><li> Data is the value of the command data
-</li><li> R (microsteps/step) is the microstep resolution (command 37)   
+</li><li> R (microsteps/step) is the microstep resolution (command 37)
 </li><li> S (steps/revolution) is the number of steps per motor revolution
 </li><li> M (mm or deg) is the microstep size
 </li><li> L (mm or deg) is the distance of linear motion per motor revolution
@@ -1130,7 +1130,7 @@ Valid data values are from (−512×R−1) to (512×R−1). Note that a value of
 <tr valign="top"> <th style="text-align: left;">Summary                  </th> <td>Sets the desired current to be used when the device is moving.     </td> </tr>
 </table>
 <p>If your application does not require high torque, it is best to decrease the driving current to reduce power consumption, vibration, and motor heating. Trial and error should suggest an appropriate setting. If higher torque is required, it is generally safe to overdrive motors as long as they are not operated continuously. Motor temperature is typically the best indication of the degree to which overdriving can be employed. If the motor gets too hot to touch (&gt;75°C), you should reduce the running current.
-</p><p>The current is related to the data by the formula:   
+</p><p>The current is related to the data by the formula:
 </p>
 <dl><dd> Current = CurrentCapacity * 10 / CommandData
 </dd></dl>
@@ -1141,7 +1141,7 @@ Valid data values are from (−512×R−1) to (512×R−1). Note that a value of
 For example, Suppose you connect a stepper motor rated for 420mA per phase to a T-CD2500. Reversing the equation above and using 420mA as Current gives:
 </p><p>CommandData
 </p>
-<dl><dd>  = 10 * CurrentCapacity / Current	
+<dl><dd>  = 10 * CurrentCapacity / Current
 </dd><dd>  = 10 * 2500mA          / 420mA
 </dd><dd>  = 59.5 (round to 60)
 </dd></dl>
@@ -1162,10 +1162,10 @@ For example, Suppose you connect a stepper motor rated for 420mA per phase to a 
 <tr valign="top"> <th style="text-align: left;">Persistence              </th> <td>Non-Volatile </td> </tr>
 <tr valign="top"> <th style="text-align: left;">Summary                  </th> <td>Sets the desired current to be used when the device is holding its position.     </td> </tr>
 </table>
-<p>It is typical to run stepper motors at their rated current only during moves (for highest torque) and reduce the current when idle just to hold the position. 
+<p>It is typical to run stepper motors at their rated current only during moves (for highest torque) and reduce the current when idle just to hold the position.
 </p><p>Typically the hold current can be set to around 25 - 50% of the running current. In some applications, the friction of the drive system alone is sufficient to hold the microstep position of the motor, and the hold current can be turned off completely. The hold current can be turned off by issuing the "Set Hold Current" instruction with data of 0.
 </p><p>When the device is moving, it applies running current to the motor. When the device stops moving, running current is applied for an additional 0.1 second before hold current is applied.
-</p><p>The current is related to the data by the formula:   
+</p><p>The current is related to the data by the formula:
 </p>
 <dl><dd> Current = CurrentCapacity * 10 / CommandData
 </dd></dl>
@@ -1176,7 +1176,7 @@ For example, Suppose you connect a stepper motor rated for 420mA per phase to a 
 For example, Suppose you connect a stepper motor rated for 420mA per phase to a T-CD2500. Reversing the equation above and using 420mA as Current gives:
 </p><p>CommandData
 </p>
-<dl><dd>  = 10 * CurrentCapacity / Current	
+<dl><dd>  = 10 * CurrentCapacity / Current
 </dd><dd>  = 10 * 2500mA          / 420mA
 </dd><dd>  = 59.5 (round to 60)
 </dd></dl>
@@ -1378,7 +1378,7 @@ For example, Suppose you connect a stepper motor rated for 420mA per phase to a 
 </table>
 <p>When a home instruction is issued, the device will accelerate at a rate determined by the acceleration setting up to the speed determined by this command. The home speed can be set independently of target speed (command 42) so that for stages that move very fast, issuing the home command would use a slower home speed and prevent the stage from crashing into the home position.
 </p><p>For a spreadsheet that can be used to calculate speed setting values for any product see <a rel="nofollow" class="external free" href="http://www.zaber.com/documents/ZaberSpeedSetting.xls">http://www.zaber.com/documents/ZaberSpeedSetting.xls</a>. Alternatively you may use the formulas below.
-</p><p>Actual Speed 
+</p><p>Actual Speed
 </p>
 <dl><dd>   = Data * 9.375 * M             mm/s  or  deg/s
 </dd><dd>   = Data * 9.375                 microsteps/s
@@ -1389,7 +1389,7 @@ For example, Suppose you connect a stepper motor rated for 420mA per phase to a 
 <p>where:
 </p>
 <ul><li> Data is the value of the command data
-</li><li> R (microsteps/step) is the microstep resolution (command 37)   
+</li><li> R (microsteps/step) is the microstep resolution (command 37)
 </li><li> S (steps/revolution) is the number of steps per motor revolution
 </li><li> M (mm or deg) is the microstep size
 </li><li> L (mm or deg) is the distance of linear motion per motor revolution
@@ -1417,7 +1417,7 @@ Valid data values are from 1 to (512×R−1).
 <p>When a move absolute or move relative instruction is issued, the device will accelerate at a rate determined by the acceleration setting up to the speed determined by this command.
 </p><p>The target velocity may be changed on-the-fly even when the device is in the middle of a move. The device will automatically adjust the velocity, but still target the final position specified in the original move.
 </p><p>For a spreadsheet that can be used to calculate speed setting values for any product see <a rel="nofollow" class="external free" href="http://www.zaber.com/documents/ZaberSpeedSetting.xls">http://www.zaber.com/documents/ZaberSpeedSetting.xls</a>. Alternatively you may use the formulas below.
-</p><p>Actual Speed 
+</p><p>Actual Speed
 </p>
 <dl><dd>   = Data * 9.375 * M             mm/s  or  deg/s
 </dd><dd>   = Data * 9.375                 microsteps/s
@@ -1428,7 +1428,7 @@ Valid data values are from 1 to (512×R−1).
 <p>where:
 </p>
 <ul><li> Data is the value of the command data
-</li><li> R (microsteps/step) is the microstep resolution (command 37)   
+</li><li> R (microsteps/step) is the microstep resolution (command 37)
 </li><li> S (steps/revolution) is the number of steps per motor revolution
 </li><li> M (mm or deg) is the microstep size
 </li><li> L (mm or deg) is the distance of linear motion per motor revolution
@@ -1455,13 +1455,13 @@ Valid data values are from 0 to (512×R−1). In Firmware 5.21 and 5.22, a value
 </table>
 <p>When a movement command is issued, the device will accelerate at a rate determined by this command "Set Acceleration" up to a maximum speed determined by the target velocity. The acceleration may be changed on-the-fly even when the device is in the middle of a move. To determine the acceleration that will result from a given data value, the following formulas may be used:
 </p>
-<dl><dd> Actual Acceleration   
+<dl><dd> Actual Acceleration
 <dl><dd> =  11250 * Data * M  mm/s^2 or deg/s^2
 </dd><dd> =  11250 * Data      microsteps/s^2
 </dd><dd> =  11250 * Data / R  steps/s^2
 </dd></dl>
 </dd></dl>
-<p>Where: 
+<p>Where:
 </p>
 <ul><li> Data is the value specified in the Command Data
 </li><li> M (mm or deg) is the microstep size
@@ -1666,7 +1666,7 @@ When the home command is issued, the device will retract until the home sensor i
 <tr valign="top"> <th style="text-align: left;">Persistence              </th> <td>n/a </td> </tr>
 <tr valign="top"> <th style="text-align: left;">Summary                  </th> <td>Returns the current value of the setting specified in the Command Data.     </td> </tr>
 </table>
-<p>Valid command data values are the command numbers of any "Set..." instruction. The device will reply using the command number of the specified setting (as if a command to change the setting had just been issued) but the setting will not be changed. 
+<p>Valid command data values are the command numbers of any "Set..." instruction. The device will reply using the command number of the specified setting (as if a command to change the setting had just been issued) but the setting will not be changed.
 </p><p>For example, command #48 is the "Set Alias" instruction. Therefore if you wish to return the current value of the alias number, simply send the Return Setting instruction with data of 48. The device will reply with command #48 and data equal to the setting value.
 </p><p>Since firmware version 5.21, this command also accepts the command numbers of any "Return..." instruction, such as command #50 "Return Device Id".
 </p><p><br />
@@ -2059,7 +2059,7 @@ When the home command is issued, the device will retract until the home sensor i
 </li><li> Make sure the power plug is plugged in all the way. If your device has LEDs, the green LED should light.
 </li><li> If your device has a manual control knob, make sure it is centered (you should feel a detent in the center position).
 </li><li> If your computer is a laptop running on batteries, try plugging in the power. Some laptops disable the serial ports when running on batteries.
-</li><li> Make sure you do not have a null modem adaptor or cable in the line. 
+</li><li> Make sure you do not have a null modem adaptor or cable in the line.
 </li><li> The serial to mini-din adaptor comes in many varieties and many have different pin connections. Check the adaptor for continuity on the proper pins by consulting the adaptor pin-out diagram above.
 </li><li> If you encounter the problem when trying to control the device with your own software, try using one of the demo programs from our website to verify that the hardware is functioning properly.
 </li></ol>
@@ -2191,7 +2191,7 @@ When the home command is issued, the device will retract until the home sensor i
 <h2> <span class="mw-headline" id="Appendix_B:_Device_Specifications"> Appendix B: Device Specifications </span></h2>
 <p>For complete device specifications for T-LA actuators please see <a rel="nofollow" class="external text" href="http://www.zaber.com/products/product_group.php?group=T-LA&amp;tab=Series%20Specs">our website</a>.
 </p>
-<!-- 
+<!--
 NewPP limit report
 Preprocessor node count: 2202/1000000
 Post-expand include size: 270743/2097152 bytes

@@ -1,11 +1,14 @@
 import abc
 
+
 class Logger(object, metaclass=abc.ABCMeta):
     def __init__(self, filename, stage):
-        self.fs = open(filename, 'w')
-        header = ('#input x + chip z [um],input y [um],input z [um],'
-                  'output x + chip z [um],output y [um],output z [um]')
-        self.fs.write(header+'\n')
+        self.fs = open(filename, "w")
+        header = (
+            "#input x + chip z [um],input y [um],input z [um],"
+            "output x + chip z [um],output y [um],output z [um]"
+        )
+        self.fs.write(header + "\n")
 
     def __del__(self):
         self.fs.close()
@@ -13,6 +16,7 @@ class Logger(object, metaclass=abc.ABCMeta):
     @abc.abstractmethod
     def log(self):
         pass
+
 
 class LoggerStages3(Logger):
     def __init__(self, filename, stages):
@@ -37,13 +41,14 @@ class LoggerStages3(Logger):
         xyz_out[0] += z_chip_nm
 
         # /1000.: nm -> um
-        xyz_in_str = ','.join([str(v/1000.) for v in xyz_in])
-        xyz_out_str = ','.join([str(v/1000.) for v in xyz_out])
+        xyz_in_str = ",".join([str(v / 1000.0) for v in xyz_in])
+        xyz_out_str = ",".join([str(v / 1000.0) for v in xyz_out])
 
-        fs_str = '%s,%s\n' % (xyz_in_str, xyz_out_str)
+        fs_str = "%s,%s\n" % (xyz_in_str, xyz_out_str)
         self.fs.write(fs_str)
 
         return fs_str
+
 
 class LoggerStages2(Logger):
     def __init__(self, filename, stages):
@@ -63,13 +68,14 @@ class LoggerStages2(Logger):
         xyz_out = [x_out_nm, y_out_nm, z_out_nm]
 
         # /1000.: nm -> um
-        xyz_in_str = ','.join([str(v/1000.) for v in xyz_in])
-        xyz_out_str = ','.join([str(v/1000.) for v in xyz_out])
+        xyz_in_str = ",".join([str(v / 1000.0) for v in xyz_in])
+        xyz_out_str = ",".join([str(v / 1000.0) for v in xyz_out])
 
-        fs_str = '%s,%s\n' % (xyz_in_str, xyz_out_str)
+        fs_str = "%s,%s\n" % (xyz_in_str, xyz_out_str)
         self.fs.write(fs_str)
 
         return fs_str
+
 
 class LoggerStage(Logger):
     def __init__(self, filename, stage):
@@ -83,10 +89,9 @@ class LoggerStage(Logger):
         xyz_st = [x_st_nm, y_st_nm, z_st_nm]
 
         # /1000.: nm -> um
-        xyz_st_str = ','.join([str(v/1000.) for v in xyz_st])
+        xyz_st_str = ",".join([str(v / 1000.0) for v in xyz_st])
 
-        fs_str = '%s\n' % xyz_st_str
+        fs_str = "%s\n" % xyz_st_str
         self.fs.write(fs_str)
 
         return fs_str
-

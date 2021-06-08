@@ -13,9 +13,10 @@ from .exceptions import TimeoutError, UnexpectedReplyError
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+
 class AsciiAxis(object):
     """Represents one axis of an ASCII device.
-    
+
     Attributes:
         parent: An AsciiDevice which represents the device which has
             this axis.
@@ -47,7 +48,7 @@ class AsciiAxis(object):
             Regardless of the device address or axis number supplied in
             (or omitted from) the message passed to this function, this
             function will always send the command to only this axis.
-            
+
             Though this is intended to make sending commands to a
             particular axis easier by allowing the user to pass in a
             "global command" (ie. one whose target device and axis are
@@ -84,9 +85,11 @@ class AsciiAxis(object):
 
         reply = self.parent.send(message)
         if reply.axis_number != self.number:
-            raise UnexpectedReplyError("Received a reply from an "
-                    "unexpected axis: axis {}".format(reply.axis_number),
-                    reply)
+            raise UnexpectedReplyError(
+                "Received a reply from an "
+                "unexpected axis: axis {}".format(reply.axis_number),
+                reply,
+            )
         return reply
 
     def home(self):
@@ -104,7 +107,7 @@ class AsciiAxis(object):
         self.poll_until_idle()
         return reply
 
-    def move_abs(self, position, blocking = True):
+    def move_abs(self, position, blocking=True):
         """Sends the "move abs" command to the axis to move it to the
         specified position, then polls the axis until it is idle.
 
@@ -124,13 +127,14 @@ class AsciiAxis(object):
             received.
         """
         reply = self.send("move abs {0:d}".format(position))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
-    def move_rel(self, distance, blocking = True):
+    def move_rel(self, distance, blocking=True):
         """Sends the "move rel" command to the axis to move it by the
         specified distance, then polls the axis until it is idle.
-        
+
         Args:
             distance: An integer representing the number of microsteps
                 by which to move the axis.
@@ -147,10 +151,11 @@ class AsciiAxis(object):
             received.
         """
         reply = self.send("move rel {0:d}".format(distance))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
-    def move_vel(self, speed, blocking = False):
+    def move_vel(self, speed, blocking=False):
         """Sends the "move vel" command to make the axis move at the
         specified speed.
 
@@ -175,7 +180,8 @@ class AsciiAxis(object):
             received.
         """
         reply = self.send("move vel {0:d}".format(speed))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
     def stop(self):
@@ -183,7 +189,7 @@ class AsciiAxis(object):
 
         Notes:
             The stop command can be used to pre-empt any movement
-            command in order to stop the axis early. 
+            command in order to stop the axis early.
 
         Raises:
             UnexpectedReplyError: The reply received was not sent by the
@@ -202,7 +208,7 @@ class AsciiAxis(object):
         Raises:
             UnexpectedReplyError: The reply received was not sent by the
                 expected device and axis.
-        
+
         Returns:
             A string containing either "BUSY" or "IDLE", depending on
             the response received from the axis.
@@ -222,13 +228,14 @@ class AsciiAxis(object):
         """
         return self.parent.poll_until_idle(self.number)
 
+
 class AsciiCommand(object):
     """Models a single command in Zaber's ASCII protocol.
 
     Attributes:
-        device_address: An integer representing the address of the 
+        device_address: An integer representing the address of the
             device to which to send this command.
-        axis_number: The integer number of the particular axis which 
+        axis_number: The integer number of the particular axis which
             should execute this command. An axis number of 0 specifies
             that all axes should execute the command, or that the
             command is "device scope".
@@ -248,10 +255,10 @@ class AsciiCommand(object):
         r"""
         Args:
             *args: A number of arguments beginning with 0 to 3 integers
-                followed by one or more strings. 
-                
+                followed by one or more strings.
+
         Notes:
-            For every absent integer argument to ``__init__``, any string 
+            For every absent integer argument to ``__init__``, any string
             argument(s) will be examined for leading integers. The first
             integer found (as an argument or as the leading part of a
             string) will set the ``device_address`` property, the second
@@ -268,8 +275,8 @@ class AsciiCommand(object):
             arguments are stripped when the arguments are parsed.
 
         Examples:
-            The flexible argument structure of this constructor allows 
-            commands to be constructed by passing in integers followed 
+            The flexible argument structure of this constructor allows
+            commands to be constructed by passing in integers followed
             by a command and its parameters, or by passing in one
             fully-formed, valid ASCII command string, or a mix of the
             two if the user desires.
@@ -288,60 +295,67 @@ class AsciiCommand(object):
             TypeError: An argument was passed to the constructor which
                 was neither an integer nor a string.
         """
-        self.data = ''
+        self.data = ""
         attributes = iter(["device_address", "axis_number", "message_id"])
         for arg in args:
             if isinstance(arg, int):
-                try: 
+                try:
                     # If self.data has got something in it,
                     # then all remaining arguments are also data.
-                    if self.data: raise StopIteration
+                    if self.data:
+                        raise StopIteration
                     next_attr = next(attributes)
                     setattr(self, next_attr, arg)
                 except StopIteration:
-                    self.data = ' '.join([self.data, str(arg)]) if self.data \
-                            else str(arg)
+                    self.data = (
+                        " ".join([self.data, str(arg)]) if self.data else str(arg)
+                    )
 
             elif isinstance(arg, (bytes, str)):
                 if isinstance(arg, bytes):
                     arg = arg.decode()
 
                 # Trim leading '/' and trailing "\r\n".
-                arg = arg.lstrip('/')
-                arg = arg.rstrip('\r\n')
+                arg = arg.lstrip("/")
+                arg = arg.rstrip("\r\n")
 
-                tokens = arg.split(' ')
+                tokens = arg.split(" ")
                 for i, token in enumerate(tokens):
-                    try: 
+                    try:
                         # As above: if data has already been found,
                         # all remaining arguments/tokens are also data.
-                        if self.data: raise StopIteration
-                        num = int(token) # Is it a number?
-                        next_attr = next(attributes) # If it *is* a number...
-                        setattr(self, next_attr, num) # ...set the next attribute.
-                    except (ValueError, StopIteration):  
-                        # If token is not a number, or if we are out of 
+                        if self.data:
+                            raise StopIteration
+                        num = int(token)  # Is it a number?
+                        next_attr = next(attributes)  # If it *is* a number...
+                        setattr(self, next_attr, num)  # ...set the next attribute.
+                    except (ValueError, StopIteration):
+                        # If token is not a number, or if we are out of
                         # attributes, the remaining text is data.
-                        data = ' '.join(tokens[i:])
-                        self.data = ' '.join([self.data, data]) if self.data \
-                                else data
+                        data = " ".join(tokens[i:])
+                        self.data = " ".join([self.data, data]) if self.data else data
                         break
             else:
-                raise TypeError("All arguments to AsciiCommand() must be "
-                        "either strings or integers. An argument of type "
-                        "{0:s} was passed.".format(str(type(arg))))
+                raise TypeError(
+                    "All arguments to AsciiCommand() must be "
+                    "either strings or integers. An argument of type "
+                    "{0:s} was passed.".format(str(type(arg)))
+                )
 
         # Set remaining attributes.
-        if not hasattr(self, "device_address"): self.device_address = 0 
-        if not hasattr(self, "axis_number"): self.axis_number = 0
-        if not hasattr(self, "message_id"): self.message_id = None
+        if not hasattr(self, "device_address"):
+            self.device_address = 0
+        if not hasattr(self, "axis_number"):
+            self.axis_number = 0
+        if not hasattr(self, "message_id"):
+            self.message_id = None
 
     def encode(self):
-        """Return a valid ASCII command based on this object's 
+        """Return a valid ASCII command based on this object's
         attributes.
-        
+
         The string returned by this function is a fully valid command,
-        formatted according to Zaber's `Ascii Protocol Manual`_. 
+        formatted according to Zaber's `Ascii Protocol Manual`_.
 
         Returns:
             A valid, fully-formed ASCII command.
@@ -349,23 +363,21 @@ class AsciiCommand(object):
         if self.message_id is not None:
             if self.data:
                 return "/{0:d} {1:d} {2:d} {3:s}\r\n".format(
-                        self.device_address, 
-                        self.axis_number,
-                        self.message_id, 
-                        self.data).encode()
-            else: return "/{0:d} {1:d} {2:d}\r\n".format(
-                    self.device_address,
-                    self.axis_number, 
-                    self.message_id).encode()
+                    self.device_address, self.axis_number, self.message_id, self.data
+                ).encode()
+            else:
+                return "/{0:d} {1:d} {2:d}\r\n".format(
+                    self.device_address, self.axis_number, self.message_id
+                ).encode()
 
         if self.data:
             return "/{0:d} {1:d} {2:s}\r\n".format(
-                    self.device_address,
-                    self.axis_number, 
-                    self.data).encode()
-        else: return "/{0:d} {1:d}\r\n".format(
-                self.device_address,
-                self.axis_number).encode()
+                self.device_address, self.axis_number, self.data
+            ).encode()
+        else:
+            return "/{0:d} {1:d}\r\n".format(
+                self.device_address, self.axis_number
+            ).encode()
 
     def __str__(self):
         """Returns an encoded ASCII command, without the newline
@@ -382,9 +394,10 @@ class AsciiCommand(object):
             string = string.decode()
         return string
 
+
 class AsciiDevice(object):
     """Represents an ASCII device.
-    
+
     Attributes:
         port: The port to which this device is connected.
         address: The address of this device. 1-99.
@@ -394,7 +407,7 @@ class AsciiDevice(object):
         """
         Args:
             port: An AsciiSerial object representing the port to which
-                this device is connected. 
+                this device is connected.
             address: An integer representing the address of this
                 device. It must be between 1-99.
 
@@ -435,11 +448,11 @@ class AsciiDevice(object):
         Notes:
             Regardless of the device address specified in the message,
             this function will always send the message to this device.
-            The axis number will be preserved. 
+            The axis number will be preserved.
 
             This behaviour is intended to prevent the user from
             accidentally sending a message to all devices instead of
-            just one. For example, if ``device1`` is an AsciiDevice 
+            just one. For example, if ``device1`` is an AsciiDevice
             with an address of 1, device1.send("home") will send the
             ASCII string "/1 0 home\\r\\n", instead of sending the
             command "globally" with "/0 0 home\\r\\n".
@@ -452,7 +465,7 @@ class AsciiDevice(object):
             An AsciiReply containing the reply received.
         """
         if isinstance(message, (str, bytes)):
-           message = AsciiCommand(message) 
+            message = AsciiCommand(message)
 
         # Always send an AsciiCommand to *this* device.
         message.device_address = self.address
@@ -460,16 +473,21 @@ class AsciiDevice(object):
         self.port.write(message)
 
         reply = self.port.read()
-        if (reply.device_address != self.address
+        if (
+            reply.device_address != self.address
             or reply.axis_number != message.axis_number
-            or reply.message_id != message.message_id):
-            raise UnexpectedReplyError("Received an unexpected reply from "
-                    "device with address {0:d}, axis {1:d}".format(
-                        reply.device_address, reply.axis_number),
-                    reply)
+            or reply.message_id != message.message_id
+        ):
+            raise UnexpectedReplyError(
+                "Received an unexpected reply from "
+                "device with address {0:d}, axis {1:d}".format(
+                    reply.device_address, reply.axis_number
+                ),
+                reply,
+            )
         return reply
 
-    def poll_until_idle(self, axis_number = 0):
+    def poll_until_idle(self, axis_number=0):
         """Polls the device's status, blocking until it is idle.
 
         Args:
@@ -488,7 +506,8 @@ class AsciiDevice(object):
         """
         while True:
             reply = self.send(AsciiCommand(self.address, axis_number, ""))
-            if reply.device_status == "IDLE": break
+            if reply.device_status == "IDLE":
+                break
             time.sleep(0.05)
         return reply
 
@@ -503,7 +522,7 @@ class AsciiDevice(object):
         self.poll_until_idle()
         return reply
 
-    def move_abs(self, position, blocking = True):
+    def move_abs(self, position, blocking=True):
         """Sends the "move abs" command to the device to move it to the
         specified position, then polls the device until it is idle.
 
@@ -523,13 +542,14 @@ class AsciiDevice(object):
             An AsciiReply containing the first reply received.
         """
         reply = self.send("move abs {0:d}".format(position))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
-    def move_rel(self, distance, blocking = True):
+    def move_rel(self, distance, blocking=True):
         """Sends the "move rel" command to the device to move it by the
         specified distance, then polls the device until it is idle.
-        
+
         Args:
             distance: An integer representing the number of microsteps
                 by which to move the device.
@@ -546,10 +566,11 @@ class AsciiDevice(object):
             An AsciiReply containing the first reply received.
         """
         reply = self.send("move rel {0:d}".format(distance))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
-    def move_vel(self, speed, blocking = False):
+    def move_vel(self, speed, blocking=False):
         """Sends the "move vel" command to make the device move at the
         specified speed.
 
@@ -574,7 +595,8 @@ class AsciiDevice(object):
             An AsciiReply containing the first reply received.
         """
         reply = self.send("move vel {0:d}".format(speed))
-        if blocking: self.poll_until_idle()
+        if blocking:
+            self.poll_until_idle()
         return reply
 
     def stop(self):
@@ -582,7 +604,7 @@ class AsciiDevice(object):
 
         Notes:
             The stop command can be used to pre-empt any movement
-            command in order to stop the device early. 
+            command in order to stop the device early.
 
         Raises:
             UnexpectedReplyError: The reply received was not sent by
@@ -608,12 +630,13 @@ class AsciiDevice(object):
         """
         return self.send("").device_status
 
+
 class AsciiReply(object):
     """Models a single reply in Zaber's ASCII protocol.
 
     Attributes:
         message_type: A string of length 1 containing either '@', '!',
-            or '#', depending on whether the message type was a 
+            or '#', depending on whether the message type was a
             "reply", "alert", or "info", respectively. Most messages
             received from Zaber devices are of type "reply", or '@'.
         device_address: An integer between 1 and 99 representing the
@@ -628,7 +651,7 @@ class AsciiReply(object):
             rejected by the device. Value will be None for device replies
             that do not have a reply flag, such as info and alert messages.
         device_status: A string of length 4, containing either "BUSY"
-            or "IDLE", depending on whether the device is moving or 
+            or "IDLE", depending on whether the device is moving or
             stationary.
         warning_flag: A string of length 2, usually "--". If it is not
             "--", it will be one of the two-letter warning flags
@@ -664,22 +687,27 @@ class AsciiReply(object):
 
         # CHECK CHECKSUM
         # All message types could have a checksum.
-        if reply_string[-3] == ':':
+        if reply_string[-3] == ":":
             self.checksum = reply_string[-2:]
             reply_string = reply_string[:-3]
             # Test checksum
             sum = 0
             for ch in reply_string[1:]:
-                try: sum += ord(ch)
-                except TypeError: sum += ch     # bytes() elements are ints.
+                try:
+                    sum += ord(ch)
+                except TypeError:
+                    sum += ch  # bytes() elements are ints.
             # Truncate to last byte and XOR + 1, as per the LRC.
             # Convert to HEX but keep only last 2 digits, left padded by 0's
             correct_checksum = "{:02X}".format(((sum & 0xFF) ^ 0xFF) + 1)[-2:]
             if self.checksum != correct_checksum:
-                raise ValueError("Checksum incorrect. Found {:s}, expected "
-                        "{:s}. Possible data corruption detected.".format(
-                            self.checksum, correct_checksum))
-        else: 
+                raise ValueError(
+                    "Checksum incorrect. Found {:s}, expected "
+                    "{:s}. Possible data corruption detected.".format(
+                        self.checksum, correct_checksum
+                    )
+                )
+        else:
             self.checksum = None
 
         # SET ATTRIBUTES
@@ -695,7 +723,7 @@ class AsciiReply(object):
             self.axis_number = int(next(tokens))
 
             # @ is the "Reply" type
-            if reply_string[0] == '@':
+            if reply_string[0] == "@":
                 t = next(tokens)
                 try:
                     self.message_id = int(t)
@@ -709,7 +737,7 @@ class AsciiReply(object):
                 self.data = next(tokens)
 
             # # is the "Info" type
-            elif reply_string[0] == '#':
+            elif reply_string[0] == "#":
                 self.device_status = None
                 self.warning_flag = None
                 self.reply_flag = None
@@ -719,16 +747,16 @@ class AsciiReply(object):
                         self.message_id = int(t)
                         self.data = next(tokens)
                     except StopIteration:
-                        self.data = ''
+                        self.data = ""
                     except ValueError:
                         self.message_id = None
                         self.data = t
                 except StopIteration:
                     self.message_id = None
-                    self.data = ''
+                    self.data = ""
 
             # ! is the "Alert" type
-            elif reply_string[0] == '!':
+            elif reply_string[0] == "!":
                 self.message_id = None
                 self.device_status = next(tokens)
                 self.warning_flag = next(tokens)
@@ -745,7 +773,7 @@ class AsciiReply(object):
         # Add any remaining tokens together as the data field.
         try:
             while True:
-                self.data = self.data + ' ' + next(tokens)
+                self.data = self.data + " " + next(tokens)
         except StopIteration:
             pass
 
@@ -760,29 +788,54 @@ class AsciiReply(object):
         .. _Ascii Protocol Manual: http://www.zaber.com/wiki/Manuals/AS
             CII_Protocol_Manual
         """
-        if self.message_type == '@':
-            retstr = "@{:02d} {:d} {:s} {:s} {:s} {:s}".format(
-                    self.device_address, self.axis_number, self.reply_flag,
-                    self.device_status, self.warning_flag, self.data) \
-                    if self.message_id is None else \
-                    "@{:02d} {:d} {:02d} {:s} {:s} {:s} {:s}".format(
-                            self.device_address, self.axis_number,
-                            self.message_id, self.reply_flag,
-                            self.device_status, self.warning_flag, self.data)
-        elif self.message_type == '#':
-            retstr = "#{:02d} {:d} {:s}".format(self.device_address,
-                    self.axis_number, self.data) \
-                    if self.message_id is None else \
-                    "#{:02d} {:d} {:02d} {:s}".format(
-                            self.device_address, self.axis_number,
-                            self.message_id, self.data)
-        elif self.message_type == '!':
-            retstr = "!{:02d} {:d} {:s} {:s}".format(self.device_address,
-                    self.axis_number, self.device_status, self.warning_flag) \
-                    if self.message_id is None else \
-                    "!{:02d} {:d} {:s} {:s}".format(self.device_address,
-                            self.axis_number, self.message_id, 
-                            self.device_status, self.warning_flag)
+        if self.message_type == "@":
+            retstr = (
+                "@{:02d} {:d} {:s} {:s} {:s} {:s}".format(
+                    self.device_address,
+                    self.axis_number,
+                    self.reply_flag,
+                    self.device_status,
+                    self.warning_flag,
+                    self.data,
+                )
+                if self.message_id is None
+                else "@{:02d} {:d} {:02d} {:s} {:s} {:s} {:s}".format(
+                    self.device_address,
+                    self.axis_number,
+                    self.message_id,
+                    self.reply_flag,
+                    self.device_status,
+                    self.warning_flag,
+                    self.data,
+                )
+            )
+        elif self.message_type == "#":
+            retstr = (
+                "#{:02d} {:d} {:s}".format(
+                    self.device_address, self.axis_number, self.data
+                )
+                if self.message_id is None
+                else "#{:02d} {:d} {:02d} {:s}".format(
+                    self.device_address, self.axis_number, self.message_id, self.data
+                )
+            )
+        elif self.message_type == "!":
+            retstr = (
+                "!{:02d} {:d} {:s} {:s}".format(
+                    self.device_address,
+                    self.axis_number,
+                    self.device_status,
+                    self.warning_flag,
+                )
+                if self.message_id is None
+                else "!{:02d} {:d} {:s} {:s}".format(
+                    self.device_address,
+                    self.axis_number,
+                    self.message_id,
+                    self.device_status,
+                    self.warning_flag,
+                )
+            )
 
         if self.checksum is not None:
             return "{:s}:{:s}\r\n".format(retstr, self.checksum)
@@ -798,6 +851,7 @@ class AsciiReply(object):
         """
         return self.encode()
 
+
 class AsciiSerial(object):
     """A class for interacting with Zaber devices using the ASCII protocol.
 
@@ -809,11 +863,12 @@ class AsciiSerial(object):
             for input before timing out. Floating-point numbers can be
             used to specify times shorter than one second. A value of
             None can also be used to specify an infinite timeout. A
-            value of 0 specifies that all reads and writes should be 
+            value of 0 specifies that all reads and writes should be
             non-blocking (return immediately without waiting). Defaults
             to 5.
     """
-    def __init__(self, port, baud = 115200, timeout = 5, inter_char_timeout = 0.01):
+
+    def __init__(self, port, baud=115200, timeout=5, inter_char_timeout=0.01):
         """
         Args:
             port: A string containing the name or URL of the serial port to
@@ -825,10 +880,10 @@ class AsciiSerial(object):
                 used to specify times shorter than a second.
             inter_char_timeout : A number representing the number of seconds
                 to wait between bytes in a reply. If your computer is bad at
-                reading incoming serial data in a timely fashion, try 
+                reading incoming serial data in a timely fashion, try
                 increasing this value.
 
-        Notes: 
+        Notes:
             When *port* is not None, this constructor immediately
             opens the serial port. There is no need to call open()
             after creating this object, unless you passed None as
@@ -847,7 +902,9 @@ class AsciiSerial(object):
             self._ser.open()
         except AttributeError:
             # serial_for_url not supported; use fallback
-            self._ser = serial.Serial(port, baud, timeout = timeout, interCharTimeout=inter_char_timeout)
+            self._ser = serial.Serial(
+                port, baud, timeout=timeout, interCharTimeout=inter_char_timeout
+            )
 
     def write(self, command):
         """Writes a command to the serial port.
@@ -877,7 +934,7 @@ class AsciiSerial(object):
         """Reads a reply from the serial port.
 
         Raises:
-            zaber.serial.TimeoutError: The duration specified by *timeout* 
+            zaber.serial.TimeoutError: The duration specified by *timeout*
                 elapsed before a full reply could be read.
             ValueError: The reply read could not be parsed and is
                 invalid.
@@ -906,7 +963,7 @@ class AsciiSerial(object):
         self._ser.close()
 
     def __enter__(self):
-        return self 
+        return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.close()
@@ -926,7 +983,8 @@ class AsciiSerial(object):
     @baudrate.setter
     def baudrate(self, b):
         if b not in (115200, 57600, 38400, 19200, 9600):
-            raise ValueError("Invalid baud rate: {:d}. Valid baud rates are "
-                    "115200, 57600, 38400, 19200, and 9600.".format(b))
+            raise ValueError(
+                "Invalid baud rate: {:d}. Valid baud rates are "
+                "115200, 57600, 38400, 19200, and 9600.".format(b)
+            )
         self._ser.baudrate = b
-

@@ -31,6 +31,7 @@ extensions = [
 
 autodoc_member_order = "bysource"
 
+
 def setup(app):
     app.add_config_value(
         "recommonmark_config",
@@ -38,5 +39,3 @@ def setup(app):
         True,
     )
     app.add_transform(AutoStructify)
-
-

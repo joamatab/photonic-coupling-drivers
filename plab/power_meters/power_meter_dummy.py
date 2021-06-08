@@ -1,7 +1,8 @@
 from . import power_meter as pm
 
+
 class DummyPowerMeter(pm.PowerMeter):
-    '''
+    """
     A dummy power metre that can be used for testing purposes.
 
     Args:
@@ -15,8 +16,9 @@ class DummyPowerMeter(pm.PowerMeter):
             that will be read when reading the power.
         dummy_wavelength_value_m (int): The dummy wavelength value in
             in [m] that will be read when reading the power.
-    '''
-    def __init__(self, dummy_power_value_W=-1., dummy_wavelength_value_m=-1.):
+    """
+
+    def __init__(self, dummy_power_value_W=-1.0, dummy_wavelength_value_m=-1.0):
         self.dummy_power_value_W = dummy_power_value_W
         self.dummy_wavelength_value_m = dummy_wavelength_value_m
 
@@ -28,4 +30,3 @@ class DummyPowerMeter(pm.PowerMeter):
 
     def set_wavelength_m(self, wavelength_m):
         pass
-    

@@ -1,4 +1,4 @@
-"""The 'binary' module contains all classes related to the Binary 
+"""The 'binary' module contains all classes related to the Binary
 protocol.
 """
 
@@ -14,12 +14,13 @@ from .exceptions import TimeoutError, UnexpectedReplyError
 logger = logging.getLogger(__name__)
 logger.addHandler(logging.NullHandler())
 
+
 class BinaryCommand(object):
     """Models a single command in Zaber's Binary protocol.
 
     Attributes:
         device_number: An integer representing the number (*a.k.a.*
-            address) of the device to which to send the command. A 
+            address) of the device to which to send the command. A
             device number of 0 indicates the command should be executed
             by all devices. 0-255.
         command_number: An integer representing the command to be sent
@@ -34,8 +35,8 @@ class BinaryCommand(object):
     .. _message ID: http://www.zaber.com/wiki/Manuals/Binary_Protocol_Ma
         nual#Set_Message_Id_Mode_-_Cmd_102
     """
-    def __init__(self, device_number, command_number, data = 0, 
-            message_id = None):
+
+    def __init__(self, device_number, command_number, data=0, message_id=None):
         """
         Args:
             device_number: An integer specifying the number of the
@@ -53,8 +54,7 @@ class BinaryCommand(object):
             ValueError: An invalid value was passed.
         """
         if device_number < 0 or command_number < 0:
-            raise ValueError("Device and command number must be between 0 "
-                    "and 255.")
+            raise ValueError("Device and command number must be between 0 " "and 255.")
         self.device_number = device_number
         self.command_number = command_number
         self.data = data
@@ -69,15 +69,16 @@ class BinaryCommand(object):
             A byte string of length 6, formatted according to Zaber's
             `Binary Protocol Manual`_.
         """
-        packed = struct.pack("<2Bl",
-                self.device_number, self.command_number, self.data)
+        packed = struct.pack("<2Bl", self.device_number, self.command_number, self.data)
         if self.message_id is not None:
             packed = packed[:5] + struct.pack("B", self.message_id)
         return packed
 
     def __str__(self):
-        return "[{:d}, {:d}, {:d}]".format(self.device_number,
-                self.command_number, self.data)
+        return "[{:d}, {:d}, {:d}]".format(
+            self.device_number, self.command_number, self.data
+        )
+
 
 class BinaryDevice(object):
     """A class to represent a Zaber device in the Binary protocol.
@@ -87,6 +88,7 @@ class BinaryDevice(object):
             this device is connected.
         number: The integer number of this device. 1-255.
     """
+
     def __init__(self, port, number):
         """
         Args:
@@ -112,8 +114,8 @@ class BinaryDevice(object):
 
         Notes:
             The ability to pass integers to this function is provided
-            as a convenience to the programmer. Calling 
-            ``device.send(2)`` is equivalent to calling 
+            as a convenience to the programmer. Calling
+            ``device.send(2)`` is equivalent to calling
             ``device.send(BinaryCommand(device.number, 2))``.
 
             Note that in the Binary protocol, devices will only reply
@@ -125,7 +127,7 @@ class BinaryDevice(object):
             sent will be completed within the timeout.
 
             Regardless of the device address specified to this function,
-            the device number of the transmitted command will be 
+            the device number of the transmitted command will be
             overwritten with the number of this device.
 
             If the command has a message ID set, this function will return
@@ -148,15 +150,17 @@ class BinaryDevice(object):
         reply = self.port.read(command.message_id is not None)
 
         if reply.device_number != self.number:
-            raise UnexpectedReplyError("Received an unexpected reply from "
-                    "device number {0:d}".format(reply.device_number),
-                    reply)
+            raise UnexpectedReplyError(
+                "Received an unexpected reply from "
+                "device number {0:d}".format(reply.device_number),
+                reply,
+            )
         return reply
 
     def home(self):
         """Sends the "home" command (1), then waits for the device to
         reply.
-        
+
         Returns: A BinaryReply containing the reply received.
         """
         return self.send(1)
@@ -167,7 +171,7 @@ class BinaryDevice(object):
 
         Args:
             position: The position in microsteps to which to move.
-        
+
         Returns: A BinaryReply containing the reply received.
         """
         return self.send(20, position)
@@ -175,10 +179,10 @@ class BinaryDevice(object):
     def move_rel(self, distance):
         """Sends the "move relative" command (21), then waits for the
         device to reply.
-        
+
         Args:
             distance: The distance in microsteps to which to move.
-        
+
         Returns: A BinaryReply containing the reply received.
         """
         return self.send(21, distance)
@@ -195,7 +199,7 @@ class BinaryDevice(object):
             immediately to this command. This means that when this
             function returns, it is likely that the device is still
             moving.
-        
+
         Returns: A BinaryReply containing the reply received.
         """
         return self.send(22, speed)
@@ -203,13 +207,13 @@ class BinaryDevice(object):
     def stop(self):
         """Sends the "stop" command (23), then waits for the device to
         reply.
-        
+
         Returns: A BinaryReply containing the reply received.
         """
         return self.send(23)
 
     def get_status(self):
-        """Sends the "Return Status" command (54), and returns the 
+        """Sends the "Return Status" command (54), and returns the
         result.
 
         Returns:
@@ -220,7 +224,6 @@ class BinaryDevice(object):
             ol_Manual#Return_Status_-_Cmd_54
         """
         return self.send(54).data
-
 
 
 class BinaryReply(object):
@@ -234,7 +237,8 @@ class BinaryReply(object):
         data: The data value associated with the reply.
         message_id: The message ID number, if present, otherwise None.
     """
-    def __init__(self, reply, message_id = False):
+
+    def __init__(self, reply, message_id=False):
         """
         Args:
             reply: A byte string of length 6 containing a binary reply
@@ -255,32 +259,35 @@ class BinaryReply(object):
                 binary (ascii) string.
         """
         if isinstance(reply, bytes):
-            self.device_number, self.command_number, self.data = \
-                    struct.unpack("<2Bl", reply)
-            if (message_id):
+            self.device_number, self.command_number, self.data = struct.unpack(
+                "<2Bl", reply
+            )
+            if message_id:
                 # Use bitmasks to extract the message ID.
                 self.message_id = (self.data & 0xFF000000) >> 24
-                self.data = self.data & 0x00FFFFFF 
-  
+                self.data = self.data & 0x00FFFFFF
+
                 # Sign extend 24 to 32 bits in the message ID case.
                 # If the data is more than 24 bits it will still be wrong,
                 # but now negative smaller values will be right.
                 if 0 != (self.data & 0x00800000):
                     self.data = (int)((self.data | 0xFF000000) - (1 << 32))
-            else: 
+            else:
                 self.message_id = None
 
         elif isinstance(reply, list):
             # Assume a 4th element is a message ID.
-            if len(reply) > 3: message_id = True
+            if len(reply) > 3:
+                message_id = True
             self.device_number = reply[0]
             self.command_number = reply[1]
             self.data = reply[2]
             self.message_id = reply[3] if message_id else None
 
         else:
-            raise TypeError("BinaryReply must be passed a byte string "
-                    "('bytes' type) or a list.")
+            raise TypeError(
+                "BinaryReply must be passed a byte string " "('bytes' type) or a list."
+            )
 
     def encode(self):
         """Returns the reply as a binary string, in the form in which it
@@ -290,12 +297,13 @@ class BinaryReply(object):
             A byte string of length 6 formatted according to the Binary
             Protocol Manual.
         """
-        return struct.pack("<2Bl", self.device_number,
-                self.command_number, self.data)
+        return struct.pack("<2Bl", self.device_number, self.command_number, self.data)
 
     def __str__(self):
-        return "[{:d}, {:d}, {:d}]".format(self.device_number, 
-                self.command_number, self.data)
+        return "[{:d}, {:d}, {:d}]".format(
+            self.device_number, self.command_number, self.data
+        )
+
 
 class BinarySerial(object):
     """A class for interacting with Zaber devices using the Binary protocol.
@@ -304,7 +312,7 @@ class BinarySerial(object):
     from a device connected over the serial port.
     """
 
-    def __init__(self, port, baud = 9600, timeout = 5, inter_char_timeout = 0.01):
+    def __init__(self, port, baud=9600, timeout=5, inter_char_timeout=0.01):
         """Creates a new instance of the BinarySerial class.
 
         Args:
@@ -317,7 +325,7 @@ class BinarySerial(object):
                 used to specify times shorter than a second.
             inter_char_timeout : A number representing the number of seconds
                 to wait between bytes in a reply. If your computer is bad at
-                reading incoming serial data in a timely fashion, try 
+                reading incoming serial data in a timely fashion, try
                 increasing this value.
 
         Notes:
@@ -339,13 +347,15 @@ class BinarySerial(object):
             self._ser.open()
         except AttributeError:
             # serial_for_url not supported; use fallback
-            self._ser = serial.Serial(port, baud, timeout = timeout, interCharTimeout = inter_char_timeout)
+            self._ser = serial.Serial(
+                port, baud, timeout=timeout, interCharTimeout=inter_char_timeout
+            )
 
     def write(self, *args):
         r"""Writes a command to the port.
 
         This function accepts either a BinaryCommand object, a set
-        of integer arguments, a list of integers, or a string. 
+        of integer arguments, a list of integers, or a string.
         If passed integer arguments or a list of integers, those
         integers must be in the same order as would be passed to the
         BinaryCommand constructor (ie. device number, then command
@@ -354,9 +364,9 @@ class BinarySerial(object):
         Args:
             *args: A BinaryCommand to be sent, or between 2 and 4
                 integer arguements, or a list containing between 2 and
-                4 integers, or a string representing a 
+                4 integers, or a string representing a
                 properly-formatted Binary command.
-                
+
         Notes:
             Passing integers or a list of integers is equivalent to
             passing a BinaryCommand with those integers as constructor
@@ -382,8 +392,10 @@ class BinarySerial(object):
         elif 1 < len(args) < 5:
             message = BinaryCommand(*args)
         else:
-            raise TypeError("write() takes at least 1 and no more than 4 "
-                    "arguments ({0:d} given)".format(len(args)))
+            raise TypeError(
+                "write() takes at least 1 and no more than 4 "
+                "arguments ({0:d} given)".format(len(args))
+            )
 
         if isinstance(message, str):
             logger.debug("> %s", message)
@@ -392,33 +404,35 @@ class BinarySerial(object):
 
             # pyserial doesn't handle hex strings.
             if sys.version_info > (3, 0):
-                data = bytes(message, "UTF-8") 
+                data = bytes(message, "UTF-8")
             else:
-                data = bytes(message) 
+                data = bytes(message)
 
         elif isinstance(message, BinaryCommand):
             data = message.encode()
             logger.debug("> %s", message)
 
         else:
-            raise TypeError("write must be passed several integers, or a "
-                    "string, list, or BinaryCommand.")
+            raise TypeError(
+                "write must be passed several integers, or a "
+                "string, list, or BinaryCommand."
+            )
 
         self._ser.write(data)
 
-    def read(self, message_id = False):
+    def read(self, message_id=False):
         """Reads six bytes from the port and returns a BinaryReply.
 
         Args:
-            message_id: True if the response is expected to have a 
+            message_id: True if the response is expected to have a
                 message ID. Defaults to False.
 
         Returns:
             A BinaryCommand containing all of the information read from
             the serial port.
 
-        Raises: 
-            zaber.serial.TimeoutError: No data was read before the 
+        Raises:
+            zaber.serial.TimeoutError: No data was read before the
                 specified timeout elapsed.
         """
         reply = self._ser.read(6)
@@ -450,7 +464,7 @@ class BinarySerial(object):
     @property
     def timeout(self):
         """The number of seconds to wait for input while reading.
-        
+
         The ``timeout`` property accepts floating point numbers for
         fractional wait times.
         """
@@ -478,7 +492,8 @@ class BinarySerial(object):
     @baudrate.setter
     def baudrate(self, b):
         if b not in (115200, 57600, 38400, 19200, 9600):
-            raise ValueError("Invalid baud rate: {:d}. Valid baud rates are "
-                    "115200, 57600, 38400, 19200, and 9600.".format(b))
+            raise ValueError(
+                "Invalid baud rate: {:d}. Valid baud rates are "
+                "115200, 57600, 38400, 19200, and 9600.".format(b)
+            )
         self._ser.baudrate = b
-

@@ -1,6 +1,7 @@
 import threading
 import queue
 
+
 class ThreadStoppable(object):
     def __init__(self, target_to_loop, timeout=-1, args=()):
         self._target_to_loop = target_to_loop
@@ -23,9 +24,7 @@ class ThreadStoppable(object):
         self.thread = threading.Thread(target=self.loop)
         self.thread.start()
 
-        assert self._timeout > 0 or self._timeout == -1, \
-                'Invalid timeout value given.'
+        assert self._timeout > 0 or self._timeout == -1, "Invalid timeout value given."
         if self._timeout > 0:
             t = threading.Timer(self._timeout, self.stop)
             t.start()
-
