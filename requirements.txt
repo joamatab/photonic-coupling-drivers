@@ -1,0 +1,4 @@
+pyvisa-py
+pyserial 
+pygpib
+ThorlabsPM100

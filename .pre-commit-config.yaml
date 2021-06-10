@@ -1,0 +1,44 @@
+repos:
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: "v4.0.1"
+    hooks:
+      - id: check-yaml
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+
+  # - repo: https://github.com/hakancelik96/unimport
+  #   rev: 0.8.3
+  #   hooks:
+  #     - id: unimport
+  #       args: [--remove, --include-star-import]
+  - repo: https://github.com/pycqa/isort
+    rev: "5.8.0"
+    hooks:
+      - id: isort
+        files: "pp/.*"
+        args: ["--profile", "black", "--filter-files"]
+
+  - repo: https://github.com/psf/black
+    rev: "21.5b2"
+    hooks:
+      - id: black
+
+  - repo: https://github.com/kynan/nbstripout
+    rev: b6da9bfa630e7570fe909fd51091a75d4d01236a
+    hooks:
+      - id: nbstripout
+        files: ".ipynb"
+
+  # - repo: https://github.com/pre-commit/mirrors-mypy
+  #   rev: "214c33306afe17f1cc7d2d55e4da705b6ebe0627"
+  #   hooks:
+  #       - id: mypy
+  #         exclude: ^(docs/|example-plugin/|tests/fixtures)
+  # - repo: https://github.com/pycqa/pydocstyle
+  #   rev: "b174899473013ab2408eb758e36bb5cf17bbfa17"
+  #   hooks:
+  # - id: pydocstyle
+  # - repo: https://gitlab.com/pycqa/flake8
+  #   rev: "a252652abb05cda1a267ac836b05d58a708ae9b6"
+  #   hooks:
+  #       - id: flake8

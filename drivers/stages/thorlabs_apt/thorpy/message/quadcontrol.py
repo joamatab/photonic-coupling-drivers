@@ -1,2 +1,0 @@
-##### Quad Control Messages #####
-#TODO

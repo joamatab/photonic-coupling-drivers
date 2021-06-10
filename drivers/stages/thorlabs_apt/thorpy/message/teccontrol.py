@@ -1,3 +1,0 @@
-##### TEC Control Messages #####
-#TODO
-

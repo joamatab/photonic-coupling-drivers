@@ -1,2 +1,0 @@
-##### Laser Control Messages #####
-#TODO

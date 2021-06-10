@@ -1,3 +1,0 @@
-##### NanoTrak Control Messages #####
-#TODO
-
