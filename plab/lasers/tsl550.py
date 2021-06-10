@@ -35,7 +35,7 @@ import time
 import struct
 
 import serial
-
+import visa
 
 class TSL550:
     """A Santec TSL-550 laser.
@@ -94,9 +94,13 @@ class TSL550:
         self, address, baudrate=9600, terminator="\r", timeout=100, query_delay=0.05
     ):
         self.activated = True
-        self.device = serial.Serial(address, baudrate=baudrate, timeout=timeout)
-        self.device.flushInput()
-        self.device.flushOutput()
+        if isinstance(address, str):
+            rm = visa.ResourceManager()
+            self.device = rm.open_resource(address)
+        else:
+            self.device = serial.Serial(address, baudrate=baudrate, timeout=timeout)
+            self.device.flushInput()
+            self.device.flushOutput()
         self.query_delay = query_delay
 
         # Python 3: convert to bytes
@@ -104,15 +108,15 @@ class TSL550:
 
         # Make sure the shutter is on
         # self.is_on = True
-        self.query("SU")
-        shutter = self.close_shutter()
+        # self.query("SU")
+        # shutter = self.close_shutter()
 
         # Set power management to auto
-        self.power_control = "auto"
-        self.power_auto()
+        # self.power_control = "auto"
+        # self.power_auto()
 
         # Set sweep mode to continuous, two-way, trigger off
-        self.sweep_set_mode()
+        # self.sweep_set_mode()
 
     def close(self):
         """
@@ -139,10 +143,11 @@ class TSL550:
             raise Exception("Device is locked")
 
         # Convert to bytes (Python 3)
-        command = command.encode("ASCII")
+        # command = command.encode("ASCII")
 
         # Write the command
-        self.device.write(command + self.terminator)
+        # self.device.write(command + self.terminator)
+        self.device.write(command)
 
     def read(self):
         """
@@ -161,7 +166,8 @@ class TSL550:
         response = ""
         in_byte = self.device.read()
         while in_byte != self.terminator:
-            response += in_byte.decode("ASCII")
+            # response += in_byte.decode("ASCII")
+            response += in_byte
             in_byte = self.device.read()
 
         return response
@@ -183,11 +189,7 @@ class TSL550:
         if self.activated == False:
             raise Exception("Device is locked")
 
-        self.write(command)
-        time.sleep(query_delay if query_delay is not None else self.query_delay)
-        response = self.read()
-
-        return response
+        return self.device.query(command)
 
     def _set_var(self, name, precision, val):
         """
@@ -1385,4 +1387,7 @@ class TSL550:
 
 
 if __name__ == "__main__":
-    c = TSL550()
+    c = TSL550('GPIB0::1::INSTR')
+    print(c.query('*IDN?'))
+    c.on()
+    

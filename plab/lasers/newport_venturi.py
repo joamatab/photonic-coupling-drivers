@@ -1,9 +1,9 @@
-import gpib
-from . import laser as las
+import pygpib as gpib
+from plab.lasers.laser import Laser
 import time
 
 
-class NewportVenturi(las.laser):
+class NewportVenturi(Laser):
     def __init__(self, gpib_num, gpib_dev_num, units="mW"):
         self._dev = gpib.dev(gpib_num, gpib_dev_num)
         self.set_power_units(units)

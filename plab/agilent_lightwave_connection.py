@@ -1,4 +1,4 @@
-import gpib
+import pygpib as gpib
 import serial as ser
 
 
