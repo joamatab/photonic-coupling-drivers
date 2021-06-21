@@ -5,12 +5,13 @@ __pycache__/
 
 # C extensions
 *.so
-*.fsp
+*.csv
 
 # Distribution / packaging
 .Python
 .idea/
 build/
+labdata
 develop-eggs/
 dist/
 downloads/

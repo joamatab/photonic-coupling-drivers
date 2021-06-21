@@ -11,6 +11,9 @@ update:
 test:
 	pytest
 
+test-visa:
+	python -m visa info
+
 cov:
 	pytest --cov= plab
 

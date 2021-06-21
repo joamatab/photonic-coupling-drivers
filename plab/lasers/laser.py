@@ -279,3 +279,6 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
         )
         powers_interp = interpolate.interp1d(wavelengths, powers)
         return powers_interp
+
+
+

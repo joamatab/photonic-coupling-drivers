@@ -1387,7 +1387,8 @@ class TSL550:
 
 
 if __name__ == "__main__":
-    c = TSL550('GPIB0::1::INSTR')
+    c = TSL550('/sys/devices/pci0000:00/0000:00:14.0/usb1/1-5')
+    # c = TSL550('GPIB0::1::INSTR')
     print(c.query('*IDN?'))
     c.on()
     
