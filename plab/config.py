@@ -47,8 +47,15 @@ class Path:
     labdata = repo_path / "labdata"
 
 
+def ls(glob: str = "*.csv") -> None:
+    """List all measured files"""
+    for csv in PATH.labdata.glob(glob):
+        print(csv.stem)
+
+
 PATH = Path()
-__all__ = ["CONFIG", "PATH"]
+__all__ = ["CONFIG", "PATH", "ls"]
 
 if __name__ == "__main__":
-    print(PATH.labdata)
+    # print(PATH.labdata)
+    ls()
