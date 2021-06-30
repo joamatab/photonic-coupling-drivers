@@ -1,5 +1,5 @@
-from . import luminos_stage as ls
-from .. import stage as st
+from plab.stages.luminos_stage import luminos_stage as ls
+from plab.stages import stage as st
 
 
 class LuminosStagesLR(st.Stages3):

@@ -1,4 +1,8 @@
 pyvisa-py
-pyserial 
+pyserial
 pygpib
 ThorlabsPM100
+qontrol
+pygpib
+omegaconf
+loguru
