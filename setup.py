@@ -24,16 +24,14 @@ setup(
     url="https://github.com/joamatab/photonic-coupling-drivers",
     license="MIT",
     author="plab community",
-    author_email="j",
+    author_email="plab",
     description="photonics lab drivers",
     long_description=read("README.md"),
     packages=find_packages(exclude=("tests",)),
     install_requires=get_install_requires(),
     python_requires=">=3.6",
     classifiers=[
-        "Development Status :: 2 - Pre-Alpha",
         "License :: OSI Approved :: MIT License",
         "Programming Language :: Python",
-        "Programming Language :: Python :: 3.7",
     ],
 )

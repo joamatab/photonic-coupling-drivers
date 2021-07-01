@@ -6,3 +6,4 @@ qontrol
 pygpib
 omegaconf
 loguru
+pydantic

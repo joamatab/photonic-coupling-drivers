@@ -1,5 +1,5 @@
 from . import power_meter as pm
-import visa
+import pyvisa as visa
 import serial as ser
 import time
 import numpy as np

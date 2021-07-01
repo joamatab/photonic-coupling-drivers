@@ -2,18 +2,21 @@ from typing import Iterable
 from time import strftime, localtime
 import pandas as pd
 import numpy as np
+import pydantic
 import qontrol
 from plab.config import PATH, logger
 
 
-serial_port_name = "/dev/ttyUSB2"
-q = qontrol.QXOutput(serial_port_name=serial_port_name, response_timeout=0.1)
+def smu_qontrol(serial_port_name: str = "/dev/ttyUSB2"):
+    """Returns qontrol SMU."""
+    q = qontrol.QXOutput(serial_port_name=serial_port_name, response_timeout=0.1)
+    logger.info(
+        f"Qontroller {q.device_id} initialised with firmware {q.firmware} and {q.n_chs} channels"
+    )
+    return q
 
-print(
-    f"Qontroller {q.device_id} initialised with firmware {q.firmware} and {q.n_chs} channels"
-)
 
-
+@pydantic.validate_arguments
 def sweep_voltage(
     sample: str = "sample_name",
     vmin: float = 0.0,
@@ -30,9 +33,10 @@ def sweep_voltage(
         vsteps: number of steps
         channels: specific channels to sweep
     """
+    q = smu_qontrol()
     timestamp = strftime("%y%m%d%H%M", localtime())
     filename = f"sweep_voltage_{timestamp}_{sample}_{vmin}_{vmax}_{vsteps}_{channels}"
-    logger.info(filename, 'start')
+    logger.info(filename, "start")
     voltages = np.linspace(vmin, vmax, vsteps)
     df = pd.DataFrame(dict(v=voltages))
 
@@ -60,13 +64,14 @@ def sweep_voltage(
 
     # set all channels to zero
     q.v[:] = 0
-    logger.info(filename, 'finished')
+    logger.info(filename, "finished")
     return df
 
 
+@pydantic.validate_arguments
 def get_current(channel: int, voltage: float) -> float:
+    q = smu_qontrol()
     q.v[channel] = float(voltage)
-
     return q.v[channel]
 
 
