@@ -1,6 +1,5 @@
 from . import laser as las
 from ..agilent_lightwave_connection import AgilentLightWaveConnection
-from ..utils import gnuplot as gp
 import time
 import struct
 from scipy import interpolate
@@ -288,7 +287,6 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
                 for w, p in zip(wavelengths, powers):
                     fs.write("%e,%e\n" % (w, p))
             script_dir = os.path.dirname(os.path.abspath(__file__))
-            gp.Gnuplot(script_dir + "/agilent_laser_sweep.gpi", {"filename": filename})
         except TypeError:
             pass
 

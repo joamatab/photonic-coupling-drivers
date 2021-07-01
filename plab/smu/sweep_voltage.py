@@ -2,9 +2,9 @@ from typing import Iterable
 from time import strftime, localtime
 import pandas as pd
 import numpy as np
-import pydantic
 import qontrol
-from plab.config import PATH, logger
+from plab.config import PATH, logger, CONFIG
+from plab.decorators import measurement
 
 
 def smu_qontrol(serial_port_name: str = "/dev/ttyUSB2"):
@@ -13,10 +13,15 @@ def smu_qontrol(serial_port_name: str = "/dev/ttyUSB2"):
     logger.info(
         f"Qontroller {q.device_id} initialised with firmware {q.firmware} and {q.n_chs} channels"
     )
+
+    device_info = dict(
+        device_id=q.device_id, n_chs=q.n_chs, serial_port_name=serial_port_name
+    )
+    CONFIG.qontrol = device_info
     return q
 
 
-@pydantic.validate_arguments
+@measurement
 def sweep_voltage(
     sample: str = "sample_name",
     vmin: float = 0.0,
@@ -50,7 +55,7 @@ def sweep_voltage(
             q.v[channel] = float(voltage)
 
             # Measure voltage (Q8iv)
-            measured_voltage = q.v[channel]
+            # measured_voltage = q.v[channel]
 
             # Measure current (Q8iv, Q8b, Q8)
             measured_current = q.i[channel]
@@ -60,15 +65,18 @@ def sweep_voltage(
 
     df.set_index(df["v"], inplace=True)
     df.pop("v")
-    df.to_csv(PATH.labdata / f"{filename}.csv")
+
+    filepath = PATH.labdata / f"{filename}.csv"
 
     # set all channels to zero
     q.v[:] = 0
     logger.info(filename, "finished")
+    df.to_csv(filepath)
+    df.path = filepath
     return df
 
 
-@pydantic.validate_arguments
+@measurement
 def get_current(channel: int, voltage: float) -> float:
     q = smu_qontrol()
     q.v[channel] = float(voltage)
