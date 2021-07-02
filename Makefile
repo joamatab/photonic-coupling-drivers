@@ -18,7 +18,7 @@ cov:
 	pytest --cov= plab
 
 mypy:
-	mypy . --ignore-missing-imports
+	mypy plab --ignore-missing-imports
 
 lint:
 	flake8

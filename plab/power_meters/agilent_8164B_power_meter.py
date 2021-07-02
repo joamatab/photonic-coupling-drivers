@@ -1,5 +1,5 @@
-from . import power_meter as pm
-from ..agilent_lightwave_connection import AgilentLightWaveConnection
+from plab.power_meters import power_meter as pm
+from plab.power_meters.agilent_lightwave_connection import AgilentLightWaveConnection
 
 
 class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):

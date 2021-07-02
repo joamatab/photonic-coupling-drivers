@@ -1,9 +1,9 @@
-from . import laser as las
-from ..agilent_lightwave_connection import AgilentLightWaveConnection
+from plab.lasers import laser as las
 import time
 import struct
 from scipy import interpolate
 import os
+from plab.power_meters.agilent_lightwave_connection import AgilentLightWaveConnection
 
 
 class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):

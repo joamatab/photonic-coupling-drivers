@@ -4,20 +4,23 @@ import pandas as pd
 import numpy as np
 import plab
 from plab.config import write_config, PATH
+from plab.measurement import measurement
 
 
-@plab.measurement
+@measurement
 def demo(
-    vmin: float = 0.0,
-    vmax: float = 1.0,
-    vsteps: int = 20,
+    vmin: float = 0.0, vmax: float = 1.0, vsteps: int = 20, **kwargs
 ) -> pd.DataFrame:
+    """
+
+    Args:
+        vmin: min voltage
+        vmax: max voltage
+        vsteps: number of steps between min and max voltage
+        **kwargs: any labstate arguments that we want to log
+    """
     voltages = np.linspace(vmin, vmax, vsteps)
     df = pd.DataFrame(dict(v=voltages))
-
-    csvpath = PATH.labdata / "a.csv"
-    df.to_csv(csvpath)
-    df.path = csvpath
     return df
 
 
@@ -27,6 +30,6 @@ def test_validator_error():
 
 
 if __name__ == "__main__":
-    df = demo()
-    write_config(df.path.with_suffix(".yml"))
+    m = demo(vstep=21.5555)
+    m.write()
     # test_validator_error()
