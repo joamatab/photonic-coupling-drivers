@@ -7,3 +7,4 @@ pygpib
 omegaconf
 loguru
 pydantic
+tqdm

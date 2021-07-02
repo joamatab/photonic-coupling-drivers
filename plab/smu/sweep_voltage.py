@@ -2,12 +2,13 @@ from typing import Iterable, Union
 from time import strftime, localtime
 import pandas as pd
 import numpy as np
+from tqdm import tqdm
 import qontrol
-from plab.config import PATH, logger, CONFIG
+from plab.config import logger, CONFIG
 from plab.measurement import measurement, Measurement
 
 
-def smu_qontrol(serial_port_name: str = "/dev/ttyUSB2"):
+def smu_qontrol(serial_port_name: str = "/dev/ttyUSB0"):
     """Returns qontrol SMU."""
     q = qontrol.QXOutput(serial_port_name=serial_port_name, response_timeout=0.1)
     logger.info(
@@ -25,7 +26,7 @@ def smu_qontrol(serial_port_name: str = "/dev/ttyUSB2"):
 def sweep_voltage(
     vmin: float = 0.0,
     vmax: float = 1.0,
-    vsteps: int = 20,
+    vsteps: int = 10,
     channels: Union[Iterable[int], int] = 64,
     **kwargs,
 ) -> Measurement:
@@ -45,7 +46,7 @@ def sweep_voltage(
     if isinstance(channels, int):
         channels = range(channels)
 
-    for channel in channels:
+    for channel in tqdm(channels):
         currents = np.zeros_like(voltages)
 
         for j, voltage in enumerate(voltages):
@@ -63,24 +64,31 @@ def sweep_voltage(
     df.set_index(df["v"], inplace=True)
     df.pop("v")
 
-    # set all channels to zero
-    # q.v[:] = 0
     return df
 
 
 def get_current(channel: int, voltage: float) -> float:
-    """Sets voltage for a channel and measures the current.
+    """Sets voltage for a channel and returns measured current.
 
     Args:
         channel:
         voltage:
+
     """
     q = smu_qontrol()
     q.v[channel] = float(voltage)
     return q.i[channel]
 
 
+def zero_voltage() -> None:
+    """Sets all voltage channels to zero."""
+    q = smu_qontrol()
+    q.v[:] = 0
+    return
+
+
 if __name__ == "__main__":
+    zero_voltage()
     # print(get_current(62, 0.1))
-    m = sweep_voltage(vmax=3, channels=(1,))
-    m.write()
+    # m = sweep_voltage(vmax=3, channels=(1,))
+    # m.write()
