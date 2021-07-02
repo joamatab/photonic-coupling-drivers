@@ -1,4 +1,4 @@
-from typing import Iterable
+from typing import Iterable, Union
 from time import strftime, localtime
 import pandas as pd
 import numpy as np
@@ -26,7 +26,7 @@ def sweep_voltage(
     vmin: float = 0.0,
     vmax: float = 1.0,
     vsteps: int = 20,
-    channels: Iterable[int] = (0,),
+    channels: Union[Iterable[int], int] = 64,
     **kwargs,
 ) -> Measurement:
     """Sweep voltage and measure current.
@@ -35,25 +35,20 @@ def sweep_voltage(
         vmin: min voltage
         vmax: max voltage
         vsteps: number of steps
-        channels: specific channels to sweep
+        channels: number of channels to sweep or specific channels (iterable)
         **kwargs: captures labstate metadata in @measurement
     """
     q = smu_qontrol()
-
-    # timestamp = strftime("%y%m%d%H%M", localtime())
-    # filename = f"sweep_voltage_{timestamp}_{sample}_{vmin}_{vmax}_{vsteps}_{channels}"
-    # logger.info(filename, "start")
-
     voltages = np.linspace(vmin, vmax, vsteps)
     df = pd.DataFrame(dict(v=voltages))
+
+    if isinstance(channels, int):
+        channels = range(channels)
 
     for channel in channels:
         currents = np.zeros_like(voltages)
 
-        # set all channels to zero
-        # q.v[:] = 0
         for j, voltage in enumerate(voltages):
-            # Set voltage
             q.v[channel] = float(voltage)
 
             # Measure voltage (Q8iv)
@@ -70,18 +65,19 @@ def sweep_voltage(
 
     # set all channels to zero
     # q.v[:] = 0
-    # filepath = PATH.labdata / f"{filename}.csv"
-    # logger.info(filename, "finished")
-    # df.to_csv(filepath)
-    # df.path = filepath
     return df
 
 
-@measurement
 def get_current(channel: int, voltage: float) -> float:
+    """Sets voltage for a channel and measures the current.
+
+    Args:
+        channel:
+        voltage:
+    """
     q = smu_qontrol()
     q.v[channel] = float(voltage)
-    return q.v[channel]
+    return q.i[channel]
 
 
 if __name__ == "__main__":

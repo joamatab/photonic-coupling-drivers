@@ -10,6 +10,7 @@
 from typing import Optional, Dict, Union
 import functools
 import inspect
+import hashlib
 import dataclasses
 import pathlib
 
@@ -44,9 +45,15 @@ class Measurement:
         yamlpath.write_text(OmegaConf.to_yaml(self.metadata))
         logger.info(f"Write {yamlpath}")
 
-    def read(self, name: str, dirpath: pathlib.Path = PATH.labdata) -> None:
-        self.data = pd.read_csv(dirpath / f"{name}.csv")
-        self.metadata = OmegaConf.load(dirpath / f"{name}.yml")
+    def read(self, filename: str, dirpath: pathlib.Path = PATH.labdata) -> None:
+        """
+
+        Args:
+            filename: name without .csv extenstion
+
+        """
+        self.data = pd.read_csv(dirpath / f"{filename}.csv")
+        self.metadata = OmegaConf.load(dirpath / f"{filename}.yml")
 
     def ls(self, glob: str = "*.csv") -> None:
         """List all measured files"""
@@ -55,6 +62,7 @@ class Measurement:
 
 
 CACHE: Dict[str, Measurement] = {}
+MAX_NAME_LENGTH = 32
 
 _remap = {
     " ": "_",
@@ -76,6 +84,9 @@ def measurement_without_validator(func):
         kwargs_copy.pop("description", "")
         kwargs_repr = [f"{k}={v!r}" for k, v in kwargs_copy.items()]
         name = f"{func.__name__}_{'_'.join(kwargs_repr)}"
+        if len(name) > MAX_NAME_LENGTH:
+            name_hash = hashlib.md5(name.encode()).hexdigest()[:8]
+            name = f"{func.__name__[:(MAX_NAME_LENGTH - 9)]}_{name_hash}"
 
         for k, v in _remap.items():
             name = name.replace(k, v)

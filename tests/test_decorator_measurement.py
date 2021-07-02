@@ -1,3 +1,4 @@
+from typing import Iterable, Union
 import pydantic
 import pytest
 import pandas as pd
@@ -9,7 +10,11 @@ from plab.measurement import measurement
 
 @measurement
 def demo(
-    vmin: float = 0.0, vmax: float = 1.0, vsteps: int = 20, **kwargs
+    vmin: float = 0.0,
+    vmax: float = 1.0,
+    vsteps: int = 20,
+    channels: Union[Iterable[int], int] = (0,),
+    **kwargs
 ) -> pd.DataFrame:
     """
 
@@ -30,6 +35,6 @@ def test_validator_error():
 
 
 if __name__ == "__main__":
-    m = demo(vstep=21.5555)
-    m.write()
+    m = demo(vstep=21.5555, channels=1)
+    m.write(overwrite=True, dirpath=PATH.cwd)
     # test_validator_error()
