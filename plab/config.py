@@ -23,7 +23,7 @@ class Path:
 PATH = Path()
 
 
-def read_config(yamlpath: Optional[PathType] = None) -> omegaconf.DictConfig:
+def read_config() -> Union[omegaconf.DictConfig, omegaconf.ListConfig]:
     """Read CONFIG from a datapath and overwrites with highest priority.
 
     As well as data from
@@ -33,19 +33,25 @@ def read_config(yamlpath: Optional[PathType] = None) -> omegaconf.DictConfig:
     - yamlpath_home: a file in ~/.plab.yml
 
     """
-    yamlpath_cwd = PATH.cwd / "config.yml"
-    yamlpath_default = PATH.module / "config.yml"
-    yamlpath_home = PATH.home / ".plab.yml"
+    yamlpath = PATH.cwd / "config.yml"
+    if os.access(yamlpath, os.R_OK) and yamlpath.exists():
+        logger.info(f"loading config from {yamlpath}")
+        conf = omegaconf.OmegaConf.load(yamlpath)
+    else:
+        conf = omegaconf.OmegaConf.create()
 
-    yamlpath = yamlpath or []
-    yamlpaths = [yamlpath_default, yamlpath_home, yamlpath_cwd] + yamlpath
-    CONFIG = omegaconf.OmegaConf.create()
-    for yamlpath in yamlpaths:
-        if os.access(yamlpath, os.R_OK) and yamlpath.exists():
-            logger.info(f"loading config from {yamlpath}")
-            CONFIG_NEW = omegaconf.OmegaConf.load(yamlpath)
-            CONFIG = omegaconf.OmegaConf.merge(CONFIG, CONFIG_NEW)
-    return CONFIG
+    # yamlpath_default = PATH.module / "config.yml"
+    # yamlpath_home = PATH.home / ".plab.yml"
+    # yamlpath_cwd = PATH.cwd / "config.yml"
+
+    # yamlpaths = [yamlpath_default, yamlpath_home, yamlpath_cwd]
+    # conf = omegaconf.OmegaConf.create()
+    # for filepath in yamlpaths:
+    #     if os.access(filepath, os.R_OK) and filepath.exists():
+    #         logger.info(f"loading config from {filepath}")
+    #         conf_new = omegaconf.OmegaConf.load(filepath)
+    #         conf = omegaconf.OmegaConf.merge(conf, conf_new)
+    return conf
 
 
 def write_config(yamlpath: PathType) -> None:

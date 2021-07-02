@@ -7,7 +7,7 @@
 - adds the measurement into a CACHE
 """
 
-from typing import Optional
+from typing import Optional, Dict, Union
 import functools
 import inspect
 import dataclasses
@@ -22,25 +22,17 @@ import omegaconf
 from plab.config import PATH, logger, CONFIG
 
 
-CACHE: [str, pd.DataFrame] = {}
-
-_remap = {
-    " ": "_",
-    "'": "",
-}
-
-
 @dataclasses.dataclass
 class Measurement:
     data: Optional[pd.DataFrame] = None
-    metadata: Optional[omegaconf.DictConfig] = None
+    metadata: Optional[Union[omegaconf.DictConfig, omegaconf.ListConfig]] = None
 
     def write(
         self,
         filename: Optional[str] = None,
         dirpath: pathlib.Path = PATH.labdata,
         overwrite: bool = False,
-    ):
+    ) -> None:
         filename = filename or f"{self.metadata.name}.csv"
         csvpath = dirpath / filename
         yamlpath = csvpath.with_suffix(".yml")
@@ -52,7 +44,7 @@ class Measurement:
         yamlpath.write_text(OmegaConf.to_yaml(self.metadata))
         logger.info(f"Write {yamlpath}")
 
-    def read(self, name: str, dirpath: pathlib.Path = PATH.labdata):
+    def read(self, name: str, dirpath: pathlib.Path = PATH.labdata) -> None:
         self.data = pd.read_csv(dirpath / f"{name}.csv")
         self.metadata = OmegaConf.load(dirpath / f"{name}.yml")
 
@@ -60,6 +52,14 @@ class Measurement:
         """List all measured files"""
         for csv in PATH.labdata.glob(glob):
             print(csv.stem)
+
+
+CACHE: Dict[str, Measurement] = {}
+
+_remap = {
+    " ": "_",
+    "'": "",
+}
 
 
 def measurement_without_validator(func):
@@ -95,6 +95,9 @@ def measurement_without_validator(func):
 
         data = func(*args, **kwargs)
 
+        if not isinstance(data, pd.DataFrame):
+            logger.warning(f"{func.__name__} needs to return a pandas.DataFrame")
+
         logger.info(f"Finished {func.__name__}({','.join(kwargs_repr)}))")
         t1 = time.time()
         dt = t1 - t0
@@ -121,7 +124,7 @@ def measurement_without_validator(func):
     return _measurement
 
 
-def measurement(func, *args, **kwargs):
+def measurement(func, *args, **kwargs) -> Measurement:
     return measurement_without_validator(validate_arguments(func), *args, **kwargs)
 
 
