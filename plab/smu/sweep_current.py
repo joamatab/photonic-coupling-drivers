@@ -1,4 +1,4 @@
-from typing import Iterable, Union, Callable
+from typing import Iterable, Union, Optional
 from time import strftime, localtime
 import pandas as pd
 import numpy as np
@@ -10,48 +10,43 @@ from plab.smu.smu_control import smu_control
 
 
 @measurement
-def sweep_voltage(
-    vmin: float = 0.0,
-    vmax: float = 1.0,
-    vsteps: int = 10,
-    channels: Union[Iterable[int], int] = 64,
-    get_instrument: Callable = smu_control,
-    **kwargs,
-) -> Measurement:
+def sweep_current(
+    imin: float = 0, imax: float = 50e-3, steps: int = 20, n: int = 1
+) -> pd.DataFrame:
     """Sweep voltage and measure current.
 
     Args:
         vmin: min voltage
         vmax: max voltage
         vsteps: number of steps
-        channels: number of channels to sweep or specific channels (iterable)
-        **kwargs: captures labstate metadata in @measurement
+        n: number of channels to sweep
     """
-    q = get_instrument()
-    voltages = np.linspace(vmin, vmax, vsteps)
-    df = pd.DataFrame(dict(v=voltages))
+    currents = np.linspace(imin, imax, steps)
+    df = pd.DataFrame(dict(i=currents))
 
-    if isinstance(channels, int):
-        channels = range(channels)
-
-    for channel in tqdm(channels):
-        currents = np.zeros_like(voltages)
-
-        for j, voltage in enumerate(voltages):
-            q.v[channel] = float(voltage)
+    if isinstance(n, int):
+        channels = range(n)
+    else:
+        channels = n
+    for channel in channels:
+        currents = np.zeros_like(currents)
+        # set all channels to zero
+        q.v[:] = 0
+        for j, voltage in enumerate(currents):
+            # Set current
+            q.i[channel] = float(voltage)
 
             # Measure voltage (Q8iv)
-            # measured_voltage = q.v[channel]
+            measured_voltage = q.v[channel]
 
             # Measure current (Q8iv, Q8b, Q8)
-            currents[j] = q.i[channel]
+            measured_current = q.i[channel]
+            currents[j] = measured_current
 
-        q.v[channel] = 0
         df[f"i_{channel}"] = currents
-
-    df.set_index(df["v"], inplace=True)
-    df.pop("v")
-
+    df.to_csv(PATH.labdata / f"sweep_current_{imin}_{imax}_{isteps}_{n}.csv")
+    # set all channels to zero
+    q.v[:] = 0
     return df
 
 

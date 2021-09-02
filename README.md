@@ -26,3 +26,9 @@ Requirements:
 * [pyusb](https://github.com/pyusb/pyusb) required for some USB devices.
 * [python-usbtmc](https://github.com/python-ivi/python-usbtmc) required for the
     Rigol1000z driver.
+
+
+
+# How can you find the IPs of your instruments
+
+You can use the linux command `arp` to get the routing tables
