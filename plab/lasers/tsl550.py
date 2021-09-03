@@ -31,6 +31,7 @@ An unidentifiable bug results in the return value of some functions being the se
 BEFORE the update (instead of the commanded setting). To verify some value has been set to
 the commanded value, simply call its respective function a second time without any arguments.
 """
+from typing import Optional
 import time
 import struct
 
@@ -253,7 +254,7 @@ class TSL550:
         self.is_on = False
         self.query("LF")
 
-    def wavelength(self, val=None):
+    def wavelength(self, val:Optional[float]=None)->float:
         """
         Sets the output wavelength, and returns nothing. If a value is not
         specified, returns the currently set wavelength.

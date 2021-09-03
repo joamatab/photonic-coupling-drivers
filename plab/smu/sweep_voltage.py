@@ -6,16 +6,16 @@ from tqdm import tqdm
 import qontrol
 from plab.config import logger, CONFIG
 from plab.measurement import measurement, Measurement
-from plab.smu.smu_control import smu_control
+from plab.smu.smu_qontrol import smu_qontrol
 
 
 @measurement
 def sweep_voltage(
     vmin: float = 0.0,
-    vmax: float = 1.0,
-    vsteps: int = 10,
+    vmax: float = 2.0,
+    vsteps: int = 3,
     channels: Union[Iterable[int], int] = 64,
-    get_instrument: Callable = smu_control,
+    get_instrument: Callable = smu_qontrol,
     **kwargs,
 ) -> Measurement:
     """Sweep voltage and measure current.
@@ -39,11 +39,6 @@ def sweep_voltage(
 
         for j, voltage in enumerate(voltages):
             q.v[channel] = float(voltage)
-
-            # Measure voltage (Q8iv)
-            # measured_voltage = q.v[channel]
-
-            # Measure current (Q8iv, Q8b, Q8)
             currents[j] = q.i[channel]
 
         q.v[channel] = 0
@@ -51,7 +46,6 @@ def sweep_voltage(
 
     df.set_index(df["v"], inplace=True)
     df.pop("v")
-
     return df
 
 

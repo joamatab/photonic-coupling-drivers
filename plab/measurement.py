@@ -22,6 +22,8 @@ from omegaconf import OmegaConf
 import omegaconf
 from plab.config import PATH, logger, CONFIG
 
+MAX_NAME_LENGTH = 64
+
 
 @dataclasses.dataclass
 class Measurement:
@@ -33,17 +35,22 @@ class Measurement:
         filename: Optional[str] = None,
         dirpath: pathlib.Path = PATH.labdata,
         overwrite: bool = False,
+        timestamp: bool = True,
     ) -> None:
         filename = filename or f"{self.metadata.name}.csv"
+        filename = (
+            f"{self.metadata.time.timestamp}_{filename}" if timestamp else filename
+        )
         csvpath = dirpath / filename
         yamlpath = csvpath.with_suffix(".yml")
         if csvpath.exists() and not overwrite:
             raise FileExistsError(f"File {csvpath} exists")
-        self.data.to_csv(csvpath)
-        logger.info(f"Write {csvpath}")
 
+        logger.info(f"Writing {csvpath}")
+        self.data.to_csv(csvpath)
+
+        logger.info(f"Writing {yamlpath}")
         yamlpath.write_text(OmegaConf.to_yaml(self.metadata))
-        logger.info(f"Write {yamlpath}")
 
     def read(self, filename: str, dirpath: pathlib.Path = PATH.labdata) -> None:
         """
@@ -61,8 +68,8 @@ class Measurement:
             print(csv.stem)
 
 
-CACHE: Dict[str, Measurement] = {}
-MAX_NAME_LENGTH = 32
+CACHE = {}
+
 
 _remap = {
     " ": "_",
@@ -109,9 +116,9 @@ def measurement_without_validator(func):
         if not isinstance(data, pd.DataFrame):
             logger.warning(f"{func.__name__} needs to return a pandas.DataFrame")
 
-        logger.info(f"Finished {func.__name__}({','.join(kwargs_repr)}))")
         t1 = time.time()
         dt = t1 - t0
+        logger.info(f"Finished {func.__name__}({','.join(kwargs_repr)})), took {dt}")
 
         settings = {}
         settings.update(

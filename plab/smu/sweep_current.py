@@ -13,12 +13,12 @@ from plab.smu.smu_control import smu_control
 def sweep_current(
     imin: float = 0, imax: float = 50e-3, steps: int = 20, n: int = 1
 ) -> pd.DataFrame:
-    """Sweep voltage and measure current.
+    """Sweep current and measure voltage. works only for q8iv
 
     Args:
-        vmin: min voltage
-        vmax: max voltage
-        vsteps: number of steps
+        imin: min current
+        imax: max current
+        steps: number of steps
         n: number of channels to sweep
     """
     currents = np.linspace(imin, imax, steps)
@@ -33,20 +33,12 @@ def sweep_current(
         # set all channels to zero
         q.v[:] = 0
         for j, voltage in enumerate(currents):
-            # Set current
             q.i[channel] = float(voltage)
-
-            # Measure voltage (Q8iv)
             measured_voltage = q.v[channel]
-
-            # Measure current (Q8iv, Q8b, Q8)
             measured_current = q.i[channel]
             currents[j] = measured_current
 
         df[f"i_{channel}"] = currents
-    df.to_csv(PATH.labdata / f"sweep_current_{imin}_{imax}_{isteps}_{n}.csv")
-    # set all channels to zero
-    q.v[:] = 0
     return df
 
 
