@@ -23,7 +23,7 @@ class Newport2832c(pm.PowerMeter):
     def __init__(self, channel, gpib_num=None, gpib_dev_num=None, com_port_num=None):
         assert (gpib_num and gpib_dev_num) or com_port_num
         self.channel = channel.lower()
-        assert self.channel in ("a", "b"), "Invalid channel choice %s." % channel
+        assert self.channel in ("a", "b"), f"Invalid channel choice {channel}."
 
         self._min_analogue_voltage_V = 0.0
         self._max_analogue_voltage_V = 2.5
@@ -53,7 +53,7 @@ class Newport2832c(pm.PowerMeter):
 
     def set_rs232_echo(self, status):
         status = bool(int(status))
-        assert status in (True, False)
+        assert status in {True, False}
         self._write("ECHO %i" % status)
         return self.get_rs232_echo()
 
@@ -61,10 +61,7 @@ class Newport2832c(pm.PowerMeter):
         return self._query("ECHO?")
 
     def _read(self):
-        if self.gpib_mode:
-            reply = self._dev.read()
-        else:
-            reply = self._dev.readline()
+        reply = self._dev.read() if self.gpib_mode else self._dev.readline()
         reply = reply.decode().strip()
         return reply
 
@@ -77,13 +74,11 @@ class Newport2832c(pm.PowerMeter):
 
     def _query(self, cmd):
         cmd = self._write(cmd)
-        r = self._read()
-        return r
+        return self._read()
 
     def _get_power_W(self):
-        power_W_str = self._query("R_%s?" % self.channel)
-        power_W = float(power_W_str)
-        return power_W
+        power_W_str = self._query(f"R_{self.channel}?")
+        return float(power_W_str)
 
     def set_wavelength_m(self, wavelength):
         wavelength_nm = wavelength * 1.0e9
@@ -92,32 +87,36 @@ class Newport2832c(pm.PowerMeter):
         return self.get_wavelength_m()
 
     def get_wavelength_m(self):
-        cmd = "LAMBDA_%s?" % self.channel
+        cmd = f"LAMBDA_{self.channel}?"
         wavelength_str = self._query(cmd)
         wavelength_nm = float(wavelength_str)
-        wavelength_m = wavelength_nm * 1.0e-9
-        return wavelength_m
+        return wavelength_nm * 1.0e-9
 
     def _set_units(self, units):
         units = units.lower()
-        assert units in ("a", "w", "w/cm", "dbm", "db", "rel"), (
-            "Not a valid unit choice %s." % units
-        )
-        cmd = "UNITS_%s %s" % (self.channel, units)
+        assert units in (
+            "a",
+            "w",
+            "w/cm",
+            "dbm",
+            "db",
+            "rel",
+        ), f"Not a valid unit choice {units}."
+
+        cmd = f"UNITS_{self.channel} {units}"
         self._write(cmd)
         return self._get_units()
 
     def _get_units(self):
-        cmd = "UNITS_%s?" % self.channel
-        units = self._query(cmd)
-        return units
+        cmd = f"UNITS_{self.channel}?"
+        return self._query(cmd)
 
     def get_external_trigger(self):
         return int(self._query("EXT?"))
 
     def set_external_trigger(self, state):
         state = int(state)
-        assert state in (0, 1)
+        assert state in {0, 1}
         self._write("EXT %i" % state)
         return get_external_trigger()
 
@@ -130,25 +129,21 @@ class Newport2832c(pm.PowerMeter):
 
     def get_external_trigger_edge(self):
         edge_bool = bool(int(self._query("EXTEDGE?")))
-        if edge_bool:
-            edge = "rising"
-        else:
-            edge = "falling"
-        return edge
+        return "rising" if edge_bool else "falling"
 
     @verify_channel
     def start_data_acquisition(self, channel):
-        self._write("RUN_%s" % channel)
+        self._write(f"RUN_{channel}")
 
     @verify_channel
     def stop_data_acquisition(self, channel):
-        self._write("STOP_%s" % channel)
+        self._write(f"STOP_{channel}")
 
     @verify_channel
     def set_data_store(self, channel, state):
         state = int(state.upper())
-        assert state in (False, True)
-        self._write("DSE_%s %i" % (channel, int(state)))
+        assert state in {False, True}
+        self._write("DSE_%s %i" % (channel, state))
         return self.get_data_store(channel)
 
     @verify_channel
@@ -157,7 +152,7 @@ class Newport2832c(pm.PowerMeter):
 
     @verify_channel
     def get_data_buffer_size(self, channel):
-        return int(self._query("DSSIZE_%s?" % channel))
+        return int(self._query(f"DSSIZE_{channel}?"))
 
     @verify_channel
     def set_data_buffer_size(self, channel, size):
@@ -168,21 +163,19 @@ class Newport2832c(pm.PowerMeter):
 
     @verify_channel
     def get_data_buffer_units(self, channel):
-        unit_str = self._query("DSUNITS_%s?" % channel)
-        return unit_str
+        return self._query(f"DSUNITS_{channel}?")
 
     @verify_channel
     def set_data_buffer_units(self, channel):
-        unit_str = self._query("DSUNITS_%s" % channel)
-        return unit_str
+        return self._query(f"DSUNITS_{channel}")
 
     @verify_channel
     def get_data_buffer_counts(self, channel):
-        return int(self._query("DSCNT_%s?" % channel))
+        return int(self._query(f"DSCNT_{channel}?"))
 
     @verify_channel
     def clear_data_buffer(self, channel):
-        self._write("DSCLR_%s" % channel)
+        self._write(f"DSCLR_{channel}")
         return self.get_data_buffer_counts()
 
     @verify_channel
@@ -190,8 +183,7 @@ class Newport2832c(pm.PowerMeter):
         """1 is the oldest sample and 1000 is the newest."""
         sample_number = int(sample_number)
         assert 1 <= sample_number <= 1000
-        power = self._query("DS_%s %i" % (channel, sample_number))
-        return power
+        return self._query("DS_%s %i" % (channel, sample_number))
 
     @verify_channel
     def get_data_buffer_samples(self, channel):
@@ -202,11 +194,11 @@ class Newport2832c(pm.PowerMeter):
 
     @verify_channel
     def get_responsivity_A_W(self, channel):
-        return float(self._query("RESP_%s?" % channel))
+        return float(self._query(f"RESP_{channel}?"))
 
     @verify_channel
     def get_range(self, channel):
-        return int(self._query("RANGE_%s?" % channel))
+        return int(self._query(f"RANGE_{channel}?"))
 
     @verify_channel
     def get_max_current_A(self, channel):
@@ -232,6 +224,4 @@ class Newport2832c(pm.PowerMeter):
         )
         c = curr_min
 
-        curr_A = m * analogue_voltage_V + c
-
-        return curr_A
+        return m * analogue_voltage_V + c

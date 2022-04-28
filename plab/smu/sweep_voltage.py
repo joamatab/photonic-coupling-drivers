@@ -58,7 +58,7 @@ def get_current(channel: int, voltage: float) -> float:
 
     """
     q = smu_qontrol()
-    q.v[channel] = float(voltage)
+    q.v[channel] = voltage
     return q.i[channel]
 
 

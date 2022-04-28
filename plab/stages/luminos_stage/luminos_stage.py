@@ -10,10 +10,10 @@ def find_stages(num_com_ports_check=10, num_motors=6, restore_default_settings=F
     com_port_numbers = [str(n) for n in range(num_com_ports_check)]
     for com_port_number in com_port_numbers:
         try:
-            port = zs.BinarySerial("/dev/ttyUSB%s" % com_port_number)
+            port = zs.BinarySerial(f"/dev/ttyUSB{com_port_number}")
             if restore_default_settings:
                 tla.send_command(port, 0, "Restore Settings", 0)
-                for i in range(num_motors):
+                for _ in range(num_motors):
                     port.read()
                 time.sleep(10.0e-3)
             tla.send_command(port, 1, "Return Device Id")
@@ -152,11 +152,7 @@ class LuminosStage(st.Stage):
         for axis in axes_dict.values():
             # Emprirically chosen 'slow' default speeds that seem to
             # give good movement.
-            if axis.name == "z":
-                s = axis.set_speed(100)
-            else:
-                s = axis.set_speed(600)
-
+            s = axis.set_speed(100) if axis.name == "z" else axis.set_speed(600)
             a = axis.set_acceleration(22)
             r = axis.set_microstep_resolution(128)
 
@@ -227,7 +223,7 @@ class LuminosStage(st.Stage):
             int(com_port_number)
             com_port = "/dev/ttyUSB%i" % int(com_port_number)
         except ValueError:
-            com_port = "/dev/%s" % com_port_number
+            com_port = f"/dev/{com_port_number}"
             self._port = zs.BinarySerial(com_port, timeout=20)
         return self._port
 
@@ -253,8 +249,7 @@ class LuminosStage(st.Stage):
         return self._port
 
     def _binary_command(self, command_name, command_data=None):
-        bc = tla.binary_command(0, command_name, command_data)
-        return bc
+        return tla.binary_command(0, command_name, command_data)
 
     def _write_data_to_non_volatile(self, byte_offset, byte_data, device_index):
         assert 0 <= byte_offset <= 127, "Address to read must be from 0 to 127."
@@ -262,30 +257,26 @@ class LuminosStage(st.Stage):
         byte4 = byte_data
         cd = byte3 | byte4 << 8
         tla.send_command(self._port, device_index, "Read Or Write Memory", cd)
-        if device_index == 0:
-            data = [
-                self._port.read().data >> 8 for i, _ in enumerate(self.axes_physical)
-            ]
-        else:
-            data = self._port.read().data >> 8
-        return data
+        return (
+            [self._port.read().data >> 8 for _ in self.axes_physical]
+            if device_index == 0
+            else self._port.read().data >> 8
+        )
 
     def _read_data_from_non_volatile(self, byte_offset, device_index):
         assert 0 <= byte_offset <= 127, "Address to read must be from 0 to 127."
         cd = byte_offset
         tla.send_command(self._port, device_index, "Read Or Write Memory", cd)
         if device_index == 0:
-            r = [self._port.read() for i, _ in enumerate(self.axes_physical)]
-            data_byte = [v.data >> 8 for v in r]
+            r = [self._port.read() for _ in self.axes_physical]
+            return [v.data >> 8 for v in r]
         else:
             r = self._port.read()
-            data_byte = r.data >> 8
-        return data_byte
+            return r.data >> 8
 
     def _send_command(self, command_name, command_data=None):
         tla.send_command(self._port, 0, command_name, command_data)
-        r = [eval(self._port.read().__str__()) for _ in self.axes_physical]
-        return r
+        return [eval(self._port.read().__str__()) for _ in self.axes_physical]
 
     def home(self):
         r = self._send_command("Home")
@@ -295,7 +286,7 @@ class LuminosStage(st.Stage):
 
     def flash_leds(self, num_flashes=5, delay_flashes_sec=1.0):
         on = True
-        for i in range(num_flashes):
+        for _ in range(num_flashes):
             for axis in self.axes_physical.values():
                 if on:
                     axis.turn_leds_off()
@@ -359,21 +350,17 @@ class LuminosAxis(st.Axis, zs.BinaryDevice):
         raise AttributeError("Don't call this function.")
 
     def _binary_command(self, command_name, command_data):
-        bc = tla.binary_command(self.device_index, command_name, command_data)
-        return bc
+        return tla.binary_command(self.device_index, command_name, command_data)
 
     def _send_command(self, command_name, command_data=None):
         tla.send_command(self._port, self.device_index, command_name, command_data)
-        r = self._port.read()
-        return r
+        return self._port.read()
 
     def _move_abs_steps(self, steps):
-        r = self._send_command("Move Absolute", steps)
-        return r
+        return self._send_command("Move Absolute", steps)
 
     def _get_device_mode(self):
-        device_mode = self._send_command("Return Setting", 40).data
-        return device_mode
+        return self._send_command("Return Setting", 40).data
 
     def _set_device_mode(self, device_mode):
         device_mode = self._send_command("Set Device Mode", device_mode)
@@ -393,18 +380,15 @@ class LuminosAxis(st.Axis, zs.BinaryDevice):
 
     def get_device_mode_bit_status(self, bit_number):
         dm = self._get_device_mode()
-        b = True if dm & 1 << bit_number else False
-        return b
+        return bool(dm & 1 << bit_number)
 
     def turn_leds_off(self):
         dm1 = self._set_device_mode_bit(14)  # 14 -> Power LED
-        dm2 = self._set_device_mode_bit(15)  # 15 -> Serial LED
-        return dm2
+        return self._set_device_mode_bit(15)
 
     def turn_leds_on(self):
         dm1 = self._unset_device_mode_bit(14)  # 14 -> Power LED
-        dm2 = self._unset_device_mode_bit(15)  # 15 -> Serial LED
-        return dm2
+        return self._unset_device_mode_bit(15)
 
     def enable_motor_knob(self):
         return self._unset_device_mode_bit(3)  # 3 -> Motor knob

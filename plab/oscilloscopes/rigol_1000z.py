@@ -47,8 +47,7 @@ class _Rigol1054zChannel:
 
     def _ask(self, cmd):
         self._write(cmd)
-        r = self._read()
-        return r
+        return self._read()
 
     def get_voltage_rms_V(self):
         channel = int(channel)
@@ -65,7 +64,7 @@ class _Rigol1054zChannel:
     def set_coupling(self, coupling):
         coupling = coupling.upper()
         assert coupling in ("AC", "DC", "GND")
-        self._write(":coup %s" % coupling)
+        self._write(f":coup {coupling}")
         return self.get_coupling()
 
     def enable(self):
@@ -124,7 +123,7 @@ class _Rigol1054zChannel:
             500,
             1000,
         )
-        self._write(":prob %s" % ratio)
+        self._write(f":prob {ratio}")
         return self.get_probe_ratio()
 
     def get_units(self):
@@ -133,12 +132,12 @@ class _Rigol1054zChannel:
     def set_units(self, unit):
         unit = unit.lower()
         assert unit in ("volt", "watt", "amp", "unkn")
-        self._write(":unit %s" % unit)
+        self._write(f":unit {unit}")
 
     def get_data_premable(self):
         pre = self._osc._ask(":wav:pre?").split(",")
         print(pre)
-        pre_dict = {
+        return {
             "format": int(pre[0]),
             "type": int(pre[1]),
             "points": int(pre[2]),
@@ -150,7 +149,6 @@ class _Rigol1054zChannel:
             "yorigin": float(pre[8]),
             "yreference": float(pre[9]),
         }
-        return pre_dict
 
     def get_data(self, mode="norm", filename=None):
         assert mode in ("norm", "max", "raw")
@@ -158,7 +156,7 @@ class _Rigol1054zChannel:
         # Setup scope
         self._osc._write(":stop")
         self._osc._write(":wav:sour chan%i" % self._channel)
-        self._osc._write(":wav:mode %s" % mode)
+        self._osc._write(f":wav:mode {mode}")
         self._osc._write(":wav:form byte")
 
         info = self.get_data_premable()
@@ -173,14 +171,13 @@ class _Rigol1054zChannel:
             if i < num_blocks:
                 self._osc._write(":wav:star %i" % (1 + i * 250000))
                 self._osc._write(":wav:stop %i" % (250000 * (i + 1)))
+            elif last_block_pts:
+                self._osc._write(":wav:star %i" % (1 + num_blocks * 250000))
+                self._osc._write(
+                    ":wav:stop %i" % (num_blocks * 250000 + last_block_pts)
+                )
             else:
-                if last_block_pts:
-                    self._osc._write(":wav:star %i" % (1 + num_blocks * 250000))
-                    self._osc._write(
-                        ":wav:stop %i" % (num_blocks * 250000 + last_block_pts)
-                    )
-                else:
-                    break
+                break
             data = self._osc._ask_raw(":wav:data?")[11:]
             data = np.frombuffer(data, "B")
             datas.append(data)
@@ -225,15 +222,14 @@ class _Rigol1054zTimebase:
         self._osc = osc
 
     def _write(self, cmd):
-        return self._osc._write(":tim%s" % cmd)
+        return self._osc._write(f":tim{cmd}")
 
     def _read(self):
         return self._osc._read()
 
     def _ask(self, cmd):
         self._write(cmd)
-        r = self._read()
-        return r
+        return self._read()
 
     def get_timebase_scale_s_div(self):
         return float(self._ask(":scal?"))
@@ -249,7 +245,7 @@ class _Rigol1054zTimebase:
     def set_timebase_mode(self, mode):
         mode = mode.lower()
         assert mode in ("main", "xy", "roll")
-        self._write(":mode %s" % mode)
+        self._write(f":mode {mode}")
         return get_timebase_scale()
 
     def get_timebase_offset_s(self):
@@ -272,7 +268,7 @@ class Rigol1054z(_Usbtmc):
         usb_id_usbtmc = usbtmc_info()
         for dev in usb_id_usbtmc:
             if dev[0] == rigol_vid and dev[1] == rigol_pid:
-                os.system("echo *IDN? >> /dev/%s" % dev[3])
+                os.system(f"echo *IDN? >> /dev/{dev[3]}")
 
         _Usbtmc.__init__(self, int(rigol_vid, 16), int(rigol_pid, 16))
 
@@ -363,11 +359,11 @@ class Rigol1054z(_Usbtmc):
             assert pts in ("AUTO", 3000, 30000, 300000, 3000000, 6000000)
 
         self.run()
-        if pts == "AUTO":
-            r = self._write(":acq:mdep AUTO")
-        else:
-            r = self._write(":acq:mdep %s" % pts)
-        return r
+        return (
+            self._write(":acq:mdep AUTO")
+            if pts == "AUTO"
+            else self._write(f":acq:mdep {pts}")
+        )
 
     def get_channels_enabled(self):
         return [c.enabled() for c in self._channels]
@@ -377,19 +373,13 @@ class Rigol1054z(_Usbtmc):
 
     def get_screenshot(self, filename, type="png"):
         self.file.timeout = 0
-        self._write(":disp:data? on,off,%s" % type)
+        self._write(f":disp:data? on,off,{type}")
 
         assert type in ("jpeg", "png", "bmp8", "bmp24", "tiff")
 
         if type == "jpeg":
             s = 3
-        elif type == "png":
-            s = 0.5
-        elif type == "bmp8":
-            s = 0.5
-        elif type == "bmp24":
-            s = 0.5
-        elif type == "tiff":
+        elif type in ["png", "bmp8", "bmp24", "tiff"]:
             s = 0.5
         time.sleep(s)
         raw_img = self._read_raw(3850780)[11:-4]

@@ -38,7 +38,7 @@ class NewportVenturi(Laser):
 
     def get_on_or_off(self):
         on_off = self._query(":conf:tls:outp?")[0]
-        return True if on_off == "ON" else False
+        return on_off == "ON"
 
     def turn_on(self):
         return self._qurey(":conf:tls:outp on")[0]
@@ -48,7 +48,7 @@ class NewportVenturi(Laser):
 
     def set_power_units(self, units):
         assert units in ("mW", "dBm")
-        units = self._query(":config:tls:unit %s" % units)[0]
+        units = self._query(f":config:tls:unit {units}")[0]
         self._units = units
         return units
 
@@ -94,7 +94,7 @@ class NewportVenturi(Laser):
         mode = mode.lower()
         assert mode in ("cont", "continuous", "step", "time")
         self._mode = mode
-        return self._query(":conf:swee:mode %s" % mode)[0]
+        return self._query(f":conf:swee:mode {mode}")[0]
 
     def wait_command_complete(self):
         assert self._query("*opc?")[0] == "1/1"

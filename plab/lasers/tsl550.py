@@ -254,7 +254,7 @@ class TSL550:
         self.is_on = False
         self.query("LF")
 
-    def wavelength(self, val:Optional[float]=None)->float:
+    def wavelength(self, val:Optional[float]=None) -> float:
         """
         Sets the output wavelength, and returns nothing. If a value is not
         specified, returns the currently set wavelength.
@@ -284,11 +284,10 @@ class TSL550:
         if self.activated == False:
             raise Exception("Device is locked")
 
-        if val is not None:
-            self._set_var("WA", 4, val)
-            return
-        else:
+        if val is None:
             return self._set_var("WA", 4, val)
+        self._set_var("WA", 4, val)
+        return
 
     def frequency(self, val=None):
         """
@@ -315,11 +314,10 @@ class TSL550:
         if self.activated == False:
             raise Exception("Device is locked")
 
-        if val is not None:
-            self._set_var("FQ", 5, val)
-            return
-        else:
+        if val is None:
             return self._set_var("FQ", 5, val)
+        self._set_var("FQ", 5, val)
+        return
 
     def power_mW(self, val=None):
         """
@@ -765,7 +763,7 @@ class TSL550:
         except KeyError:
             raise AttributeError("Invalid sweep configuration.")
 
-        self.query("SM{}".format(mode))
+        self.query(f"SM{mode}")
 
     def sweep_get_mode(self):
         """
@@ -1160,7 +1158,7 @@ class TSL550:
             raise Exception("Device is locked")
 
         mode = 0
-        if val == "None" or val == None:
+        if val == "None" or val is None:
             mode = 0
         elif val == "Stop":
             mode = 1
@@ -1172,7 +1170,7 @@ class TSL550:
             raise ValueError(
                 "Invalide output trigger mode supplied. Choose from None, Stop, Start, and Step."
             )
-        current_state = int(self.query("TM{}".format(mode)))
+        current_state = int(self.query(f"TM{mode}"))
         if current_state == 1:
             return "Stop"
         elif current_state == 2:
@@ -1270,7 +1268,7 @@ class TSL550:
         time.sleep(0.1)
 
         # Iterate through wavelength points
-        for nWave in range(int(num_points)):
+        for _ in range(int(num_points)):
             while True:
                 try:
                     in_byte = self.device.read(4)
@@ -1278,8 +1276,6 @@ class TSL550:
                     break
                 except:
                     print("Failed to read in wavelength data.")
-                    pass
-
             wavelength_points.append(current_wavelength)
 
         # stop laser from outputting
@@ -1344,7 +1340,7 @@ class TSL550:
         status = self.query("SU")
 
         # Check if LD is on
-        self.is_on = True if int(status) < 0 else False
+        self.is_on = int(status) < 0
 
         code = {"-": "'-': ON\n", " ": "none: OFF\n"}
         digit_6 = {"0": "Coherence control: OFF\n", "1": "Coherence control: ON\n"}
@@ -1375,7 +1371,7 @@ class TSL550:
             "6": "Operation status: LD current is setting and attenuator is setting\n",
             "7": "Operation status: Wavelength is tuning, LD current is setting, and attenuator is setting\n",
         }
-        output = (
+        return (
             status
             + code[status[0]]
             + digit_6[status[1]]
@@ -1385,7 +1381,6 @@ class TSL550:
             + digit_2[status[5]]
             + digit_1[status[6]]
         )
-        return output
 
 
 if __name__ == "__main__":

@@ -30,8 +30,7 @@ class PicomotorSystem:
         self._usb.write("SC0\n\r")
         self.wait_scan_done()
         scan = self._usb.write_read("SC?\n\r")
-        scan_bits = bin(int(scan))
-        return scan_bits
+        return bin(int(scan))
 
 
 class PicomotorStages(st.Stages3):
@@ -56,10 +55,6 @@ class PicomotorStages(st.Stages3):
         if resolve_address_conflicts:
             self.picomotor_system.resolve_address_conflicts()
 
-        # todo check this works!!
-
-        stages_dict = {}
-
         self.input = PicomotorStage(
             axis_controller_dict_input,
             C1=C1,
@@ -78,8 +73,7 @@ class PicomotorStages(st.Stages3):
             PicomotorStage_usb=PicomotorStages._usb,
         )
 
-        stages_dict["input"] = self.input
-
+        stages_dict = {"input": self.input}
         self.chip = PicomotorStage(
             axis_controller_dict_chip,
             C1=C1,
@@ -148,7 +142,11 @@ class PicomotorStage(st.Stage):
         #     if resolve_address_conflicts:
         #         PicomotorStage.picomotor_system.resolve_address_conflicts()
 
-        if not picomotor_system and not PicomotorStage_usb:
+        if picomotor_system or PicomotorStage_usb:
+            PicomotorStage._usb = PicomotorStage_usb
+            self.picomotor_system = picomotor_system
+
+        else:
             try:
                 PicomotorStage._usb = usb_dev.UsbDevice(0x104D, 0x4000)
                 self.picomotor_system = PicomotorSystem(PicomotorStage._usb)
@@ -156,10 +154,6 @@ class PicomotorStage(st.Stage):
                     self.picomotor_system.resolve_address_conflicts()
             except:
                 print("usb connection fail")
-        else:
-            PicomotorStage._usb = PicomotorStage_usb
-            self.picomotor_system = picomotor_system
-
         axes_dict = {}
         for axis in axis_controller_dict:
             try:
@@ -172,15 +166,15 @@ class PicomotorStage(st.Stage):
             except:
                 print("something went wrong connecting")
 
-        if ("A" in axes_dict.keys()) and ("B" in axes_dict.keys()):
+        if "A" in axes_dict and "B" in axes_dict:
             axes_dict["y"] = PicomotorYAxis(
                 axes_dict["A"], axes_dict["B"], reverse_axis_y
             )
-        if ("APrime" in axes_dict.keys()) and ("BPrime" in axes_dict.keys()):
+        if "APrime" in axes_dict and "BPrime" in axes_dict:
             axes_dict["z"] = PicomotorZAxis(
                 axes_dict["APrime"], axes_dict["BPrime"], reverse_axis_z
             )
-        if "C" in axes_dict.keys():
+        if "C" in axes_dict:
             axes_dict["x"] = PicomotorXAxis(axes_dict["C"], reverse_axis_x)
 
         super().__init__(
@@ -229,9 +223,10 @@ class PicomotorAxis(st.Axis):
         update_position_absolute=100,
     ):
         motor_number = int(motor_number)
-        assert motor_number in (1, 2, 3, 4, 5), (
+        assert motor_number in {1, 2, 3, 4, 5}, (
             "Invalid axis `%i` given." % motor_number
         )
+
         self._usb = usb
         self._controller_number = controller_number
         self._motor_number = motor_number
@@ -285,16 +280,13 @@ class PicomotorAxisLinear(PicomotorAxis, st.AxisLinear):
         steps = distance_from_home_nm / self._step_size_nm
         self._write_motor("PA%i" % steps)
         self.wait_motor_moved()
-        r = self.get_current_position_nm()
-        return r
+        return self.get_current_position_nm()
 
     def _get_current_position_nm(self):
-        r = float(self._write_read_motor("PA?")) * self._step_size_nm
-        return r
+        return float(self._write_read_motor("PA?")) * self._step_size_nm
 
     def _get_home_position(self):
-        r = float(self._write_read_motor("DH?"))
-        return r
+        return float(self._write_read_motor("DH?"))
 
     def _set_home_position(self):
         self._write_motor("DH")
@@ -362,14 +354,12 @@ class PicomotorYZAxis(st.AxisY):
             total_rel_move_nm -= step_nm
         r1 = self._a_axis._move_abs_nm(distance_from_home_nm)
         r2 = self._b_axis._move_abs_nm(distance_from_home_nm)
-        r = 0.5 * (r1 + r2)
-        return r
+        return 0.5 * (r1 + r2)
 
     def _get_current_position_nm(self):
         r1 = self._a_axis.get_current_position_nm()
         r2 = self._b_axis.get_current_position_nm()
-        r = 0.5 * (r1 + r2)
-        return r
+        return 0.5 * (r1 + r2)
 
     def get_home_position(self):
         r1 = self._a_axis._get_home_position()
@@ -419,5 +409,4 @@ class PicomotorXAxis(st.AxisX):
         return self._c_axis._get_home_position()
 
     def set_home_position(self):
-        r = self._c_axis._set_home_position()
-        return r
+        return self._c_axis._set_home_position()

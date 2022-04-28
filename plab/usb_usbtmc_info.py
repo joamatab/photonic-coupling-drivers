@@ -10,8 +10,7 @@ def usbtmc_info():
     filenames = os.listdir(root_usbtmc)
     matches = []
     for filename in filenames:
-        match = re.search("\d-\d", filename)
-        if match:
+        if match := re.search("\d-\d", filename):
             matches.append(match.string[:-4])
 
     for match in matches:
@@ -20,9 +19,9 @@ def usbtmc_info():
         filename_ser = root_usb + match + "/serial"
 
         with open(filename_vid, "r") as fs:
-            vid = "0x" + fs.read().strip()
+            vid = f"0x{fs.read().strip()}"
         with open(filename_pid, "r") as fs:
-            pid = "0x" + fs.read().strip()
+            pid = f"0x{fs.read().strip()}"
         with open(filename_ser, "r") as fs:
             ser = fs.read().strip()
 

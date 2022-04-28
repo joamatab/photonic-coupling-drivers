@@ -9,7 +9,7 @@ class AgilentLightWaveConnection:
             self._dev = gpib.dev(gpib_num, gpib_dev_num)
             self._gpib_used = True
         elif serial_port:
-            self._dev = ser.Serial("/dev/" + serial_port, 38400)
+            self._dev = ser.Serial(f"/dev/{serial_port}", 38400)
             self._gpib_used = False
 
     def _write(self, cmd):
@@ -26,18 +26,16 @@ class AgilentLightWaveConnection:
         return data.decode("ascii")
 
     def _read_raw(self, num_bytes=100):
-        if self._gpib_used:
-            data = gpib.read(self._dev, num_bytes)
-        else:
-            data = self._dev.read(num_bytes)
-        return data
+        return (
+            gpib.read(self._dev, num_bytes)
+            if self._gpib_used
+            else self._dev.read(num_bytes)
+        )
 
     def _query(self, cmd, num_bytes=100):
         self._write(cmd)
-        data = self._read(num_bytes)
-        return data
+        return self._read(num_bytes)
 
     def _query_raw(self, cmd, num_bytes=100):
         self._write(cmd)
-        data = self._read_raw(num_bytes)
-        return data
+        return self._read_raw(num_bytes)

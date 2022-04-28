@@ -93,8 +93,7 @@ class ScannerDesign:
         return self._set_pos_list
 
     def _get_stages_pos(self):
-        pos = [get_pos() for get_pos in self._get_pos_list]
-        return pos
+        return [get_pos() for get_pos in self._get_pos_list]
 
     def _restore_stages_pos(self, pos):
         for p, mf in zip(pos, self._set_pos_list):
@@ -105,10 +104,7 @@ class ScannerDesign:
         pos_init = self._get_stages_pos()
 
         # Do all scans in step.
-        coords_pows = []
-        for scan in scans:
-            coords_pows.append(scan.scan(goto_max))
-
+        coords_pows = [scan.scan(goto_max) for scan in scans]
         # Measure power at end of scans.
         pow_final_uW = scans[-1].power_meter.get_power_uW()
 
@@ -343,12 +339,14 @@ class Scan(metaclass=abc.ABCMeta):
         coords = np.array([coord + axes_pos for coord in self.pattern_flat])
 
         for (min, max), coords_axis, axis in zip(self._min_max, coords.T, self.axes):
-            assert np.all(min <= coords_axis), (
-                "Pattern exceeds %s-axis minimum range." % axis.name
-            )
-            assert np.all(coords_axis <= max), (
-                "Pattern exceeds %s-axis maximum range." % axis.name
-            )
+            assert np.all(
+                min <= coords_axis
+            ), f"Pattern exceeds {axis.name}-axis minimum range."
+
+            assert np.all(
+                coords_axis <= max
+            ), f"Pattern exceeds {axis.name}-axis maximum range."
+
 
         results = [None] * coords.shape[0]
         for i, coord in enumerate(tqdm.tqdm(coords, ncols=80)):
@@ -462,7 +460,7 @@ class Rectangle(Scan):
                 ",",
             )
             root, _ = os.path.splitext(plot)
-            filename_png = root + ".png"
+            filename_png = f"{root}.png"
             plot_args = {
                 "filename": plot,
                 "filename_png": filename_png,
@@ -471,8 +469,8 @@ class Rectangle(Scan):
             }
             path = os.path.abspath(__file__)
             dir_path = os.path.dirname(path)
-            gp.Gnuplot(dir_path + "/scanner.gpi", plot_args)
-            os.system("display %s" % filename_png)
+            gp.Gnuplot(f"{dir_path}/scanner.gpi", plot_args)
+            os.system(f"display {filename_png}")
         return r
 
     @staticmethod
@@ -511,7 +509,7 @@ class Rectangle(Scan):
 
         path = os.path.abspath(__file__)
         dir_path = os.path.dirname(path)
-        gp.Gnuplot(dir_path + "/pattern.gpi", args)
+        gp.Gnuplot(f"{dir_path}/pattern.gpi", args)
 
 
 class RectangleXY(Rectangle):
@@ -555,32 +553,24 @@ class RectangleXY(Rectangle):
     @staticmethod
     def _set_origin(pts, origin):
         assert origin in ("c", "lm", "rm", "tm", "bm", "tl", "tr", "bl", "br")
-        if origin == "c":
-            ref = (0, 0)
-        elif origin == "tl":
-            ref = pts[0][-1]
-        elif origin == "tr":
-            ref = pts[-1][-1]
-        elif origin == "bl":
+        if origin == "bl":
             ref = pts[0][0]
+        elif origin == "bm":
+            ref = 0, pts[0][0][1]
         elif origin == "br":
             ref = pts[-1][0]
-        elif origin == "tm":
-            ref_x = 0
-            ref_y = pts[0][-1][1]
-            ref = (ref_x, ref_y)
-        elif origin == "bm":
-            ref_x = 0
-            ref_y = pts[0][0][1]
-            ref = (ref_x, ref_y)
+        elif origin == "c":
+            ref = (0, 0)
         elif origin == "lm":
-            ref_x = pts[0][-1][0]
-            ref_y = 0
-            ref = (ref_x, ref_y)
+            ref = pts[0][-1][0], 0
         elif origin == "rm":
-            ref_x = pts[-1][0][0]
-            ref_y = 0
-            ref = (ref_x, ref_y)
+            ref = pts[-1][0][0], 0
+        elif origin == "tl":
+            ref = pts[0][-1]
+        elif origin == "tm":
+            ref = 0, pts[0][-1][1]
+        elif origin == "tr":
+            ref = pts[-1][-1]
         return ref
 
 
@@ -637,8 +627,6 @@ class Line(Scan):
             pts -= pts[-1] / 2
         elif origin == "r":
             pts -= pts[-1]
-        elif origin == "l":
-            pass
         pts = np.array([[p] for p in pts])
         return pts
 
@@ -709,8 +697,7 @@ class Cross(Scan):
         l1 = np.concatenate((l1.T, [np.zeros(l1.size)])).T
         l2 = Line._pattern(axis_2_pts, axis_2_step, "c")
         l2 = np.concatenate(([np.zeros(l2.size)], l2.T)).T
-        pts = np.concatenate((l1, l2))
-        return pts
+        return np.concatenate((l1, l2))
 
     @staticmethod
     def plot(pattern, filename="pattern.dat"):
@@ -816,8 +803,7 @@ class ScanRoutines(object):
         r = RectangleXY(
             stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, (0, 0), meander, "c"
         )
-        pos_pows = r.scan(goto_max, filename)
-        return pos_pows
+        return r.scan(goto_max, filename)
 
     def take_image_input(
         self, x_pts, y_pts, x_step_um, y_step_um, filename="input.dat", goto_max=False
@@ -837,8 +823,7 @@ class ScanRoutines(object):
         c = RectangleXY(
             stage, self.pm, x_pts, y_pts, x_step_um, y_step_um, meander=False
         )
-        pos_pows = c.scan(True)
-        return pos_pows
+        return c.scan(True)
 
     def goto_max_rect_input(self, x_pts, y_pts, x_step_um, y_step_um):
         return self._goto_max_rect(self.inp, x_pts, y_pts, x_step_um, y_step_um)
@@ -848,8 +833,7 @@ class ScanRoutines(object):
 
     def _goto_max_line2XY(self, stage, x_pts, y_pts, x_step_um, y_step_um):
         c = Line2(stage.x, stage.y, self.pm, x_pts, y_pts, x_step_um, y_step_um)
-        pos_pows = c.scan(True)
-        return pos_pows
+        return c.scan(True)
 
     def goto_max_line2XY_input(self, x_pts, y_pts, x_step_um, y_step_um):
         return self._goto_max_line2XY(self.inp, x_pts, y_pts, x_step_um, y_step_um)
@@ -863,8 +847,7 @@ class ScanRoutines(object):
         o = OptimiseLine2XY_Z(
             self.pm, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
         )
-        pos_pows = o.scan(True)
-        return pos_pows
+        return o.scan(True)
 
     def goto_max_line2XY_z_input(
         self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
@@ -886,8 +869,7 @@ class ScanRoutines(object):
         o = OptimiseRectZ(
             self.pm, stage, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
         )
-        pos_pows = o.scan(True)
-        return pos_pows
+        return o.scan(True)
 
     def goto_max_rect_z_input(
         self, x_pts, y_pts, z_pts, x_step_um, y_step_um, z_step_um
@@ -905,8 +887,7 @@ class ScanRoutines(object):
 
     def _goto_max_cross(self, stage, x_pts, y_pts, x_step_um, y_step_um):
         c = CrossXY(stage, self.pm, x_pts, y_pts, x_step, y_step)
-        pos_pows = c.scan(True)
-        return pos_pows
+        return c.scan(True)
 
     def goto_max_cross_input(self, x_pts, y_pts, x_step_um, y_step_um):
         return self._goto_max_cross(self.inp, x_pts, y_pts, x_step_um, y_step_um)

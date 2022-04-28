@@ -36,15 +36,13 @@ class UsbDevice:
         return self._dev.write(self._ep_out.bEndpointAddress, data)
 
     def read_raw(self):
-        data_raw = self._dev.read(
+        return self._dev.read(
             self._ep_in.bEndpointAddress, self._ep_in.wMaxPacketSize
         )
-        return data_raw
 
     def read(self):
         data_raw = self.read_raw()
-        data = "".join([chr(d) for d in data_raw])
-        return data
+        return "".join([chr(d) for d in data_raw])
 
     def write_read(self, data):
         self.write(data)
