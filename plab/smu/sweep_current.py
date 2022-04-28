@@ -24,10 +24,7 @@ def sweep_current(
     currents = np.linspace(imin, imax, steps)
     df = pd.DataFrame(dict(i=currents))
 
-    if isinstance(n, int):
-        channels = range(n)
-    else:
-        channels = n
+    channels = range(n) if isinstance(n, int) else n
     for channel in channels:
         currents = np.zeros_like(currents)
         # set all channels to zero
@@ -51,7 +48,7 @@ def get_current(channel: int, voltage: float) -> float:
 
     """
     q = smu_qontrol()
-    q.v[channel] = float(voltage)
+    q.v[channel] = voltage
     return q.i[channel]
 
 

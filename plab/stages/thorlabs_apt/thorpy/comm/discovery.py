@@ -15,7 +15,7 @@ def discover_stages():
             # FIXME: this could maybe be solved in a better way?
             dev._langids = (1033,)
             # KDC101 3-port is recognized as FTDI in newer kernels
-            if not (dev.manufacturer == "Thorlabs" or dev.manufacturer == "FTDI"):
+            if dev.manufacturer not in ["Thorlabs", "FTDI"]:
                 continue
         except usb.core.USBError:
             continue
@@ -34,8 +34,7 @@ def discover_stages():
         port = port_candidates[0]
 
         p = Port.create(port, dev.serial_number)
-        for stage in p.get_stages().values():
-            yield stage
+        yield from p.get_stages().values()
 
 
 if __name__ == "__main__":

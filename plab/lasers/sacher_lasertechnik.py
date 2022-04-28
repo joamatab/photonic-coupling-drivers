@@ -120,7 +120,7 @@ class _Laser:
     def set_i_p_mode(self, i_p_mode):
         i_p_mode = i_p_mode.lower()
         assert i_p_mode in ("i", "p")
-        return self._comm.write(":l:mod %s" % i_p_mode)
+        return self._comm.write(f":l:mod {i_p_mode}")
 
     def get_i_p_mode(self):
         return self._comm.query(":l:mod?")

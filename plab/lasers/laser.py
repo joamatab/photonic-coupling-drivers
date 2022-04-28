@@ -74,8 +74,7 @@ class Laser(object, metaclass=abc.ABCMeta):
         Returns:
             float: Power in [W].
         """
-        power_W = 10.0 ** (power_dbm / 10.0) / 1.0e3
-        return power_W
+        return 10.0 ** (power_dbm / 10.0) / 1.0e3
 
     @staticmethod
     def watts_to_dbm(power_W):
@@ -87,8 +86,7 @@ class Laser(object, metaclass=abc.ABCMeta):
         Returns:
             float: Power in [dBm].
         """
-        power_dbm = 10.0 * math.log10(power_W / 1.0e-3)
-        return power_dbm
+        return 10.0 * math.log10(power_W / 1.0e-3)
 
     def set_power_mW(self, power_mW):
         return self.set_power_W(power_mW * 1.0e-3) * 1.0e3
@@ -235,8 +233,7 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
             p_store.append(p)
 
             if filename:
-                w_p = [w]
-                w_p.extend(p)
+                w_p = [w, *p]
                 s = ",".join([str(v) for v in w_p])
                 fs.write(s + "\n")
 
@@ -277,8 +274,7 @@ class LaserTunable(Laser, metaclass=abc.ABCMeta):
             delay_wavelength_changes_s=1.0,
             filename=None,
         )
-        powers_interp = interpolate.interp1d(wavelengths, powers)
-        return powers_interp
+        return interpolate.interp1d(wavelengths, powers)
 
 
 

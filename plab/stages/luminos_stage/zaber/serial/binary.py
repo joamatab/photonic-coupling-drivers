@@ -403,11 +403,7 @@ class BinarySerial(object):
                 raise ValueError("write of a string expects length 6.")
 
             # pyserial doesn't handle hex strings.
-            if sys.version_info > (3, 0):
-                data = bytes(message, "UTF-8")
-            else:
-                data = bytes(message)
-
+            data = bytes(message, "UTF-8") if sys.version_info > (3, 0) else bytes(message)
         elif isinstance(message, BinaryCommand):
             data = message.encode()
             logger.debug("> %s", message)

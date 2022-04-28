@@ -86,10 +86,10 @@ class AsciiAxis(object):
         reply = self.parent.send(message)
         if reply.axis_number != self.number:
             raise UnexpectedReplyError(
-                "Received a reply from an "
-                "unexpected axis: axis {}".format(reply.axis_number),
+                f"Received a reply from an unexpected axis: axis {reply.axis_number}",
                 reply,
             )
+
         return reply
 
     def home(self):
@@ -768,12 +768,12 @@ class AsciiReply(object):
                 raise ValueError("Invalid response type: %c" % (reply_string[0],))
 
         except StopIteration:
-            raise ValueError("Incomplete response: {}".format(reply_string))
+            raise ValueError(f"Incomplete response: {reply_string}")
 
         # Add any remaining tokens together as the data field.
         try:
             while True:
-                self.data = self.data + " " + next(tokens)
+                self.data = f"{self.data} {next(tokens)}"
         except StopIteration:
             pass
 

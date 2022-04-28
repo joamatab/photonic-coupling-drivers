@@ -21,22 +21,20 @@ def create_stages(serial_number):
         info["SER"] for _, _, info in serial_ports if "SER" in info.keys()
     ]
 
-    if serial_number in serial_numbers:
-        device = None
-        for dev, _, info in serial_ports:
-            if dev[:11] == "/dev/ttyUSB":
-                try:
-                    if info["SER"] == serial_number:
-                        device = dev
-                except KeyError:
-                    pass
+    if serial_number not in serial_numbers:
+        return None
 
-        p = Port.create(device, serial_number)
-        axis = p.get_stages()[1]
-    else:
-        axis = None
+    device = None
+    for dev, _, info in serial_ports:
+        if dev[:11] == "/dev/ttyUSB":
+            try:
+                if info["SER"] == serial_number:
+                    device = dev
+            except KeyError:
+                pass
 
-    return axis
+    p = Port.create(device, serial_number)
+    return p.get_stages()[1]
 
 
 class ThorlabsAptAxis(st.Axis):
@@ -95,14 +93,13 @@ class ThorlabsAptAxisLinear(ThorlabsAptAxis, st.AxisLinear):
         self.axis.home()
 
     def _in_motion(self):
-        in_motion = (
+        return (
             self.axis.status_in_motion_forward
             or self.axis.status_in_motion_reverse
             or self.axis.status_in_motion_jogging_forward
             or self.axis.status_in_motion_jogging_reverse
             or self.axis.status_in_motion_homing
         )
-        return in_motion
 
     @property
     def _position_absolute_min_nm(self):

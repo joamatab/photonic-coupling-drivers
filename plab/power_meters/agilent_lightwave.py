@@ -31,17 +31,16 @@ class AgilentLightWaveSystem(AgilentLightWaveConnection):
             self.set_unlock()
 
     def get_lock_status(self):
-        lock_status = bool(int(self._query("lock?")))
-        return lock_status
+        return bool(int(self._query("lock?")))
 
     def set_lock(self, password="1234"):
         assert len(password) == 4, "Password should be 4 characters long."
-        self._write("lock 1,%s" % password)
+        self._write(f"lock 1,{password}")
         return self.get_lock_status()
 
     def set_unlock(self, password="1234"):
         assert len(password) == 4, "Password should be 4 characters long."
-        self._write("lock 0,%s" % password)
+        self._write(f"lock 0,{password}")
         return self.get_lock_status()
 
     def get_modules_installed(self):
