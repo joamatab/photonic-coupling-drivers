@@ -99,15 +99,13 @@ class PowerMeter(object, metaclass=abc.ABCMeta):
         Returns:
             float: The, perhaps averaged, power reading.
         """
+        if average <= 1:
+            return self._get_power_W()
         powers = []
-        if average > 1:
-            for i in range(average):
-                powers.append(self._get_power_W())
-                time.sleep(read_period_ms / 1000.0)
-            avg_power = sum(powers) / float(len(powers))
-        else:
-            avg_power = self._get_power_W()
-        return avg_power
+        for _ in range(average):
+            powers.append(self._get_power_W())
+            time.sleep(read_period_ms / 1000.0)
+        return sum(powers) / float(len(powers))
 
     def get_power_mW(self, average=1, read_period_ms=None):
         return self.get_power_W(average, read_period_ms) * 1.0e3
@@ -123,8 +121,7 @@ class PowerMeter(object, metaclass=abc.ABCMeta):
 
     def get_power_dbm(self, average=1, read_period_ms=None):
         power_W = self.get_power_W()
-        power_dBm = PowerMeter.watts_to_dbm(power_W)
-        return power_dBm
+        return PowerMeter.watts_to_dbm(power_W)
 
     def get_wavelength_mm(self):
         return self.get_wavelength_m() * 1.0e3
@@ -145,8 +142,7 @@ class PowerMeter(object, metaclass=abc.ABCMeta):
         Returns:
             float: Power in [W].
         """
-        power_W = 10.0 ** (power_dbm / 10.0) / 1.0e3
-        return power_W
+        return 10.0 ** (power_dbm / 10.0) / 1.0e3
 
     @staticmethod
     def watts_to_dbm(power_W):
@@ -158,11 +154,7 @@ class PowerMeter(object, metaclass=abc.ABCMeta):
         Returns:
             float: Power in [dBm].
         """
-        if power_W < 1.0e-12:
-            power_dbm = -1000.0
-        else:
-            power_dbm = 10.0 * math.log10(power_W / 1.0e-3)
-        return power_dbm
+        return -1000.0 if power_W < 1.0e-12 else 10.0 * math.log10(power_W / 1.0e-3)
 
     def get_analogue_power_W(self, analogue_voltage_V):
         """
@@ -180,5 +172,4 @@ class PowerMeter(object, metaclass=abc.ABCMeta):
         """
         curr_A = self.get_analogue_current_A(analogue_voltage_V)
         resp_A_W = self.get_responsivity_A_W()
-        pow_W = curr_A / resp_A_W
-        return pow_W
+        return curr_A / resp_A_W

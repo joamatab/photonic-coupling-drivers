@@ -36,22 +36,9 @@ def read_config() -> Union[omegaconf.DictConfig, omegaconf.ListConfig]:
     yamlpath = PATH.cwd / "config.yml"
     if os.access(yamlpath, os.R_OK) and yamlpath.exists():
         logger.info(f"loading config from {yamlpath}")
-        conf = omegaconf.OmegaConf.load(yamlpath)
+        return omegaconf.OmegaConf.load(yamlpath)
     else:
-        conf = omegaconf.OmegaConf.create()
-
-    # yamlpath_default = PATH.module / "config.yml"
-    # yamlpath_home = PATH.home / ".plab.yml"
-    # yamlpath_cwd = PATH.cwd / "config.yml"
-
-    # yamlpaths = [yamlpath_default, yamlpath_home, yamlpath_cwd]
-    # conf = omegaconf.OmegaConf.create()
-    # for filepath in yamlpaths:
-    #     if os.access(filepath, os.R_OK) and filepath.exists():
-    #         logger.info(f"loading config from {filepath}")
-    #         conf_new = omegaconf.OmegaConf.load(filepath)
-    #         conf = omegaconf.OmegaConf.merge(conf, conf_new)
-    return conf
+        return omegaconf.OmegaConf.create()
 
 
 def write_config(yamlpath: PathType) -> None:

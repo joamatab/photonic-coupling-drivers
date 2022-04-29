@@ -89,8 +89,7 @@ class Stages2(Stages, metaclass=abc.ABCMeta):
             self.output._set_logger(logger)
 
     def _push_pos_xyz(self, stack):
-        xyz = {}
-        xyz["in"] = self.input.get_current_position_um()
+        xyz = {"in": self.input.get_current_position_um()}
         xyz["out"] = self.output.get_current_position_um()
         stack.append(xyz)
         return stack
@@ -148,8 +147,7 @@ class Stages3(Stages, metaclass=abc.ABCMeta):
         x_curr_in_um = self.input.x.get_current_position_um()
         x_curr_out_um = self.output.x.get_current_position_um()
         x_ctr_um = 0.5 * (x_curr_in_um + x_curr_out_um)
-        x_move_rel_um = x_ctr_around_line_um - x_ctr_um
-        return x_move_rel_um
+        return x_ctr_around_line_um - x_ctr_um
 
     def _ctr_in_out_y_axes(self, y_ctr_around_line_um=None):
         if y_ctr_around_line_um is None:
@@ -160,8 +158,7 @@ class Stages3(Stages, metaclass=abc.ABCMeta):
         y_curr_in_um = self.input.y.get_current_position_um()
         y_curr_out_um = self.output.y.get_current_position_um()
         y_ctr_um = 0.5 * (y_curr_in_um + y_curr_out_um)
-        y_move_rel_um = y_ctr_around_line_um - y_ctr_um
-        return y_move_rel_um
+        return y_ctr_around_line_um - y_ctr_um
 
     def ctr_in_out_x_axes(self, x_ctr_around_line_um=None):
         """
@@ -367,19 +364,18 @@ class Stages3(Stages, metaclass=abc.ABCMeta):
         if not move_rel_output_xc_um:
             move_rel_output_xc_um = move_rel_xc_um
 
-        if self.input.c and self.output.c:
-            r = self.move_rel_um_c_long(
+        return (
+            self.move_rel_um_c_long(
                 move_rel_xc_um, move_rel_output_xc_um, xc_ctr_around_line_um
             )
-        else:
-            r = self.move_rel_um_x_long(
+            if self.input.c and self.output.c
+            else self.move_rel_um_x_long(
                 move_rel_xc_um, move_rel_output_xc_um, xc_ctr_around_line_um
             )
-        return r
+        )
 
     def _push_pos_xyz(self, stack):
-        xyz = {}
-        xyz["in"] = self.input.get_current_position_um()
+        xyz = {"in": self.input.get_current_position_um()}
         xyz["out"] = self.output.get_current_position_um()
         xyz["chip"] = self.chip.get_current_position_um()
         stack.append(xyz)
@@ -489,7 +485,7 @@ class Stage(object, metaclass=abc.ABCMeta):
         self.axes = axes_dict
 
         # Assign None to any axes that weren't provided.
-        axes_str = tuple(["x", "y", "z", "roll", "pitch", "yaw"])
+        axes_str = "x", "y", "z", "roll", "pitch", "yaw"
         for axis_str in axes_str:
             if axis_str not in self.axes:
                 self.axes[axis_str] = None
@@ -510,10 +506,7 @@ class Stage(object, metaclass=abc.ABCMeta):
         else:
             self.axes["c"] = None
 
-        if self.axes["c"]:
-            self.axes["xc"] = self.axes["c"]
-        else:
-            self.axes["xc"] = self.axes["x"]
+        self.axes["xc"] = self.axes["c"] or self.axes["x"]
         self.axes["cx"] = self.axes["xc"]
 
         # More convenient ways to access the axes.
@@ -528,7 +521,7 @@ class Stage(object, metaclass=abc.ABCMeta):
         self.num_stages -= 1
 
     def __str__(self):
-        return "Stage with %s axes." % ", ".join(self.axes_physical.keys())
+        return f'Stage with {", ".join(self.axes_physical.keys())} axes.'
 
     def _set_logger(self, logger):
         self.x._set_logger(logger)
@@ -552,18 +545,9 @@ class Stage(object, metaclass=abc.ABCMeta):
             float: y-coordinate.
             float: z-coordinate.
         """
-        if self.x:
-            x = self.x.get_current_position_nm()
-        else:
-            x = None
-        if self.y:
-            y = self.y.get_current_position_nm()
-        else:
-            y = None
-        if self.z:
-            z = self.z.get_current_position_nm()
-        else:
-            z = None
+        x = self.x.get_current_position_nm() if self.x else None
+        y = self.y.get_current_position_nm() if self.y else None
+        z = self.z.get_current_position_nm() if self.z else None
         return (x, y, z)
 
     def get_current_position_arc_second(self):
@@ -575,18 +559,9 @@ class Stage(object, metaclass=abc.ABCMeta):
             float: pitch-coordinate.
             float: yaw-coordinate.
         """
-        if self.roll:
-            r = self.roll.get_current_position_arc_second()
-        else:
-            r = None
-        if self.pitch:
-            p = self.pitch.get_current_position_arc_second()
-        else:
-            p = None
-        if self.yaw:
-            y = self.yaw.get_current_position_arc_second()
-        else:
-            y = None
+        r = self.roll.get_current_position_arc_second() if self.roll else None
+        p = self.pitch.get_current_position_arc_second() if self.pitch else None
+        y = self.yaw.get_current_position_arc_second() if self.yaw else None
         return (r, p, y)
 
     def get_current_position_um(self):
@@ -890,8 +865,7 @@ class AxisLinear(Axis, metaclass=abc.ABCMeta):
             float: The position of the axis in [nm] after the
                 movement.
         """
-        r = self._move_rel(distance_nm)
-        return r
+        return self._move_rel(distance_nm)
 
     def move_rel_um(self, distance_um):
         """
@@ -1326,10 +1300,7 @@ class AxisChip(object):
         if reverse_axis:
             c1c2_um *= -1.0
         self._d = np.linalg.norm(c1c2_um)
-        if c1_c2_distance_mask_um:
-            self._e = self._d / c1_c2_distance_mask_um
-        else:
-            self._e = 1.0
+        self._e = self._d / c1_c2_distance_mask_um if c1_c2_distance_mask_um else 1.0
         self._v = c1c2_um / c1c2_um[0] * self._e
 
     def _get_xyz_rel_move_um(self, rel_move_um):

@@ -20,10 +20,7 @@ def stage_name_from_get_hw_info(m):
     hw_version = m["hw_version"]
     model_number = m["model_number"].decode("ascii").strip("\x00")
     if controller_type in (60, 80):
-        if hw_version == 3:
-            return "HS ZST6(B)"
-        else:
-            return "ZST6(B)"
+        return "HS ZST6(B)" if hw_version == 3 else "ZST6(B)"
     elif controller_type in (27, 63, 83, 2197):
         # Info obtained from thorlabs technical support
         if stage_type == 0x01:
@@ -86,9 +83,8 @@ def stage_name_from_get_hw_info(m):
     elif controller_type in (67,):
         if stage_type == 20:
             return "MVS005MZ"
-        else:
-            _print_stage_detection_improve_message(m)
-            return "DDSM100"
+        _print_stage_detection_improve_message(m)
+        return "DDSM100"
     else:
         _print_stage_detection_improve_message(m)
         return None
@@ -421,7 +417,7 @@ class GenericStage:
             timeout=3,
             message=MGMSG_MOT_REQ_VELPARAMS(chan_ident=self._chan_ident),
         )
-        return self._state_acceleration / (self._EncCnt * (self._T ** 2) * 65536)
+        return self._state_acceleration / (self._EncCnt * (self._T**2) * 65536)
 
     @min_velocity.setter
     def min_velocity(self, new_value):
@@ -440,7 +436,7 @@ class GenericStage:
             chan_ident=self._chan_ident,
             min_velocity=int(min_velocity * (self._EncCnt * self._T * 65536)),
             max_velocity=int(max_velocity * (self._EncCnt * self._T * 65536)),
-            acceleration=int(acceleration * (self._EncCnt * (self._T ** 2) * 65536)),
+            acceleration=int(acceleration * (self._EncCnt * (self._T**2) * 65536)),
         )
         self._port.send_message(msg)
         # Invalidate current values
@@ -607,13 +603,15 @@ class GenericStage:
         start_time = time.time()
         last_message_time = 0
         while any(getattr(self, prop) is None for prop in properties):
-            if message is not None:
-                if last_message_time == 0 or (
+            if message is not None and (
+                last_message_time == 0
+                or (
                     message_repeat_timeout is not None
                     and time.time() - last_message_time > message_repeat_timeout
-                ):
-                    self._port.send_message(message)
-                    last_message_time = time.time()
+                )
+            ):
+                self._port.send_message(message)
+                last_message_time = time.time()
             time.sleep(0.1)
             if timeout is not None and time.time() - start_time >= timeout:
                 return False

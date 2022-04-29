@@ -175,8 +175,7 @@ class NewportStage(st.Stage):
         return r
 
     def get_motors_on_off(self):
-        on_off_state = [axis.get_motor_on_off() for axis in self.axes.values() if axis]
-        return on_off_state
+        return [axis.get_motor_on_off() for axis in self.axes.values() if axis]
 
     def set_motors_off(self):
         for axis in self.axes.values():
@@ -202,13 +201,11 @@ class NewportStage(st.Stage):
         cmd_str = device_str + command + " "
         if data is not None:
             cmd_str += str(data)
-        r = gpib_stage.query(cmd_str).strip()
-        return r
+        return gpib_stage.query(cmd_str).strip()
 
     @staticmethod
     def _read_command(gpib_stage):
-        r = gpib_stage.read()
-        return r
+        return gpib_stage.read()
 
     @staticmethod
     def _flush_buffer(gpib_stage):
@@ -267,15 +264,14 @@ class NewportSystem(object):
         return NewportStage._read_command()
 
     def _read_configuration(self):
-        c = self._send_read_command(self.scum_str + "ENAINT?").strip()
-        c = bin(int("0x" + c[3:], 16))
+        c = self._send_read_command(f"{self.scum_str}ENAINT?").strip()
+        c = bin(int(f"0x{c[3:]}", 16))
         return c
 
     def _write_configuration(self, configuration):
         assert not configuration >> 16, "Configuration byte has bits set above bit 16."
-        c = "$%s" % hex(configuration)[2:]
-        r = self._send_command(self.scum_str + "ENAINT", c)
-        return r
+        c = f"${hex(configuration)[2:]}"
+        return self._send_command(f"{self.scum_str}ENAINT", c)
 
     def _modify_configuration(self, bits_to_set, bits_to_unset):
         NewportStage._flush_buffer(self.gpib_stage)  # Flush buffer in case.
@@ -316,8 +312,7 @@ class NewportSystem(object):
         time.sleep(1)
         self._send_command("DEFEE")
         time.sleep(1)
-        r = self.restart_system()
-        return r
+        return self.restart_system()
 
     def restart_system(self):
         self._send_command("SRSTART")
@@ -332,7 +327,7 @@ class NewportAxis(st.Axis):
     def __init__(
         self, gpib_stage, axis_str, reverse_axis=False, update_position_absolute=100
     ):
-        assert axis_str in ("X", "Y", "Z"), "Invalid axis string `%s` given." % axis_str
+        assert axis_str in ("X", "Y", "Z"), f"Invalid axis string `{axis_str}` given."
         self.axis_str = axis_str
         self.gpib_stage = gpib_stage
         super().__init__(
@@ -362,8 +357,8 @@ class NewportAxis(st.Axis):
 
     def wait_axis_completed_command(self):
         time.sleep(0.01)
-        s = self.axis_str + "B"
-        while s == self.axis_str + "B":
+        s = f"{self.axis_str}B"
+        while s == f"{self.axis_str}B":
             s = self._send_read_command("STAT?")
             time.sleep(0.02)
 
@@ -388,8 +383,7 @@ class NewportAxisLinear(NewportAxis, st.AxisLinear):
     def _move_abs_nm(self, distance_from_home_nm):
         self._send_read_command("G", distance_from_home_nm / 1000.0)
         self.wait_axis_completed_command()
-        r = self.get_current_position_nm()
-        return r
+        return self.get_current_position_nm()
 
     def _get_current_position_nm(self):
         r = self._send_read_command("G?").strip()

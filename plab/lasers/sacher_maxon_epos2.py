@@ -94,8 +94,7 @@ class MaxonEpos2:
         return self._write_memory(0x2081, 0, ct.c_int32(value), 4)
 
     def calc_motor_acc(self, nm_per_sec_sec):
-        acc = nm_per_sec_sec / self._nm_per_step
-        return acc  # [step/s/s]
+        return nm_per_sec_sec / self._nm_per_step
 
     def _open_device(self, device_name, protocol_stack_name, interface_name, port_name):
         dn = ct.c_char_p(device_name.encode())
@@ -310,9 +309,7 @@ class MaxonEpos2:
         pos_reg_new = pos_reg + pos_encoder_rel
         self._write_memory(0x2081, 0, ct.c_int32(pos_reg_new), 4)
 
-        wl = self.get_wavelength_from_motor_pos(pos_reg_new)  # 7.
-
-        return wl
+        return self.get_wavelength_from_motor_pos(pos_reg_new)
 
     def _get_current_position(self):
         pos = _long()
@@ -421,8 +418,7 @@ class MaxonEpos2:
         A = self._A
         B = self._B
         C = self._C
-        wl_nm = A * position ** 2 + B * position + C
-        return wl_nm
+        return A * position**2 + B * position + C
 
     def _solve_quadratic(self, wavelength):
         A = self._A
@@ -430,8 +426,8 @@ class MaxonEpos2:
         C = self._C
 
         k = -B / (2 * A)
-        j = B ** 2 / (4 * A ** 2) - (C - wavelength) / A
-        j = j ** 0.5
+        j = B**2 / (4 * A**2) - (C - wavelength) / A
+        j = j**0.5
         assert j.imag == 0
 
         return k, j
@@ -456,9 +452,7 @@ class MaxonEpos2:
         vals = []
         for wavelength in [self._wl_min, self._wl_max]:
             k, j = self._solve_quadratic(wavelength)
-            vals.append(k - j)
-            vals.append(k + j)
-
+            vals.extend((k - j, k + j))
         if vals[0] < 0 < vals[2]:
             bow = "neg"
         elif vals[1] < 0 < vals[3]:

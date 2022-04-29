@@ -69,15 +69,13 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
         return float(data)
 
     def set_wavelength_m(self, wavelength_m):
-        cmd = "sour0:wav %sM" % wavelength_m
+        cmd = f"sour0:wav {wavelength_m}M"
         self._write(cmd)
-        r = self.get_wavelength_m()
-        return r
+        return self.get_wavelength_m()
 
     def get_wavelength_m(self):
         cmd = "sour0:wav?"
-        r = float(self._query(cmd))
-        return r
+        return float(self._query(cmd))
 
     def set_unit(self, unit):
         """
@@ -93,7 +91,7 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
             str: The units the laser is oeprating in.
         """
         assert unit.lower() in ("dbm", "w")
-        cmd = "sour0:pow:unit %s" % unit
+        cmd = f"sour0:pow:unit {unit}"
         self._write(cmd)
         self._power_unit = self.get_unit()
         return self._power_unit
@@ -111,11 +109,7 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
         inString = "sour0:pow:unit?"
         data = self._query(inString)
         unit = int(data)
-        if unit == 0:
-            unit_str = "dBm"
-        else:
-            unit_str = "W"
-        return unit_str
+        return "dBm" if unit == 0 else "W"
 
     def last_operation_completed(self):
         return self._query("*OPC?")
@@ -127,8 +121,7 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
         return finish
 
     def _get_output_mode(self):
-        m = self._query("outp0:path?")
-        return m
+        return self._query("outp0:path?")
 
     def _set_output_mode(self, mode):
         """
@@ -146,14 +139,14 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
         """
         m = mode.lower()
         assert m in ("high", "lows", "bhr", "blr")
-        self._write("outp0:path %s" % m)
+        self._write(f"outp0:path {m}")
         return self._get_output_mode()
 
     def get_velocity_nm_s(self):
         return float(self._query("sour0:wav:swe:spe?"))
 
     def set_velocity_nm_s(self, velocity):
-        assert float(sweep_speed_nm_per_sec) in (
+        assert float(sweep_speed_nm_per_sec) in {
             0.5,
             1.0,
             2.0,
@@ -162,7 +155,8 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
             20.0,
             40.0,
             80.0,
-        ), "Invalid sweep speed choice; laser only supports certain sweep speeds nm/s."
+        }, "Invalid sweep speed choice; laser only supports certain sweep speeds nm/s."
+
         self._write("sour0:wav:swe:spe %fnm/s" % sweep_speed_nm_per_sec)
         return self.get_velocity_nm_s()
 
@@ -200,7 +194,7 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
 
         param_check = self._query("sour0:wav:swe:chec?").strip()
         if param_check != "0,OK":
-            raise RuntimeError("Invalid sweep parameters: `%s`." % param_check)
+            raise RuntimeError(f"Invalid sweep parameters: `{param_check}`.")
 
         max_selectable_power_W = float(
             self._query(
@@ -309,5 +303,4 @@ class LaserAgilent8164B(AgilentLightWaveConnection, las.LaserTunable):
             sweep_speed_nm_per_sec,
             filename,
         )
-        powers_interp = interpolate.interp1d(wavelengths, powers)
-        return powers_interp
+        return interpolate.interp1d(wavelengths, powers)

@@ -183,8 +183,6 @@ class LuminosStageLR(ls.LuminosStage):
                 ),
             }
 
-            return axes_idx, axes_dict
-
         else:
 
             axes_idx = {"z": 1}
@@ -200,7 +198,7 @@ class LuminosStageLR(ls.LuminosStage):
                 ),
             }
 
-            return axes_idx, axes_dict
+        return axes_idx, axes_dict
 
 
 class LuminosAxisLR(ls.LuminosAxis):

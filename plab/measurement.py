@@ -159,8 +159,7 @@ def demo(
         **kwargs: any labstate arguments that we want to log
     """
     voltages = np.linspace(vmin, vmax, vsteps)
-    df = pd.DataFrame(dict(v=voltages))
-    return df
+    return pd.DataFrame(dict(v=voltages))
 
 
 if __name__ == "__main__":

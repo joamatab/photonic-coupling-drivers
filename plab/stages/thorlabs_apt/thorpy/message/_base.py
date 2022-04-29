@@ -98,45 +98,52 @@ class Message:
         return self.__name__
 
     @classproperty
-    def category(cls):
-        split_name = cls.__name__.split("_")
+    def category(self):
+        split_name = self.__name__.split("_")
         assert split_name[0] == "MGMSG", "Class name has to start with MGMSG_"
         return split_name[1].lower()
 
     @classproperty
-    def is_property(cls):
-        split_name = cls.__name__.split("_")
+    def is_property(self):
+        split_name = self.__name__.split("_")
         return split_name[2] in ("REQ", "SET", "GET")
 
     @classproperty
-    def parameter_names(cls):
+    def parameter_names(self):
         return [name for name, encoding in cls.parameters if name is not None]
 
     @classproperty
-    def struct_description(cls):
+    def struct_description(self):
         # On the first call the class wide message Struct is not yet built,
         # after that we may rely on the class wide cache of the Struct.
-        if cls._struct_description is None:
-            if not cls.is_long_cmd:
-                full_struct_desc = (
+        if self._struct_description is None:
+            full_struct_desc = (
+                (
                     [
                         ("message_id", "H"),
+                        ("length", "H"),
+                        ("dest", "B"),
+                        ("source", "B"),
                     ]
-                    + cls.parameters
+                    + self.parameters
+                )
+                if self.is_long_cmd
+                else (
+                    (
+                        [
+                            ("message_id", "H"),
+                        ]
+                        + self.parameters
+                    )
                     + [("dest", "B"), ("source", "B")]
                 )
-            else:
-                full_struct_desc = [
-                    ("message_id", "H"),
-                    ("length", "H"),
-                    ("dest", "B"),
-                    ("source", "B"),
-                ] + cls.parameters
+            )
+
             names, encodings = zip(*full_struct_desc)
             message_struct = struct.Struct("<" + "".join(encodings))
-            cls._struct_description = names, message_struct
+            self._struct_description = names, message_struct
         else:
-            names, message_struct = cls._struct_description
+            names, message_struct = self._struct_description
         return names, message_struct
 
     @property
@@ -150,8 +157,8 @@ class Message:
         )
 
     @classproperty
-    def binary_length(cls):
-        return cls.struct_description[1].size
+    def binary_length(self):
+        return self.struct_description[1].size
 
     def __len__(self):
         return self.binary_length
@@ -175,7 +182,7 @@ class Message:
         assert len(message_classes) < 2, "Multiple classes with id {0} defined".format(
             message_id
         )
-        if len(message_classes) < 1:
+        if not message_classes:
             raise KeyError("Unknown message id {0}".format(message_id))
         return message_classes[0]
 

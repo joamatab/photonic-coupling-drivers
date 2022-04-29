@@ -16,7 +16,7 @@ class _Usbtmc(object):
     """
 
     def __init__(self, usbtmc_dev_number):
-        usbtmc = "/dev/usbtmc" + str(usbtmc_dev_number)
+        usbtmc = f"/dev/usbtmc{str(usbtmc_dev_number)}"
         self._dev = os.open(usbtmc, os.O_RDWR)
 
     def write(self, command):
@@ -39,8 +39,7 @@ class _Usbtmc(object):
         Returns:
             str: Response from the USBTMC device.
         """
-        resp = os.read(self._dev, number_of_characters)
-        return resp
+        return os.read(self._dev, number_of_characters)
 
     def ask(self, command, number_of_characters=16):
         """
@@ -55,8 +54,7 @@ class _Usbtmc(object):
             str: Response from the USBTMC device.
         """
         self.write(command)
-        resp = self.read(number_of_characters)
-        return resp
+        return self.read(number_of_characters)
 
 
 class Pm100Usb(_Usbtmc, pm.PowerMeter):
@@ -155,9 +153,7 @@ class Pm100Usb(_Usbtmc, pm.PowerMeter):
         )
         c = curr_min
 
-        curr_A = m * analogue_voltage_V + c
-
-        return curr_A
+        return m * analogue_voltage_V + c
 
     def get_responsivity_A_W(self):
         return float(self.ask("CORR:POW:RESP?"))

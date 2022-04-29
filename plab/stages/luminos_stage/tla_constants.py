@@ -53,8 +53,7 @@ commands = (
 
 
 def get_command_names():
-    command_names = tuple(c[0] for c in commands)
-    return command_names
+    return tuple(c[0] for c in commands)
 
 
 def get_command_full(name):
@@ -96,16 +95,13 @@ def binary_command(device_index, command_name, command_data=None):
         ), "No data given for a command that requires data."
     else:
         cd = command_data
-    command = zs.BinaryCommand(device_index, int(command_number), int(cd))
-    return command
+    return zs.BinaryCommand(device_index, int(command_number), int(cd))
 
 
 def send_command(port, device_index, command_name, command_data=None):
     bc = binary_command(device_index, command_name, command_data)
 
-    # Clear the buffer before sending command to avoid unexpected responses.
-    bytes_in_buffer = port._ser.in_waiting
-    if bytes_in_buffer:
+    if bytes_in_buffer := port._ser.in_waiting:
         port._ser.read(bytes_in_buffer)
 
     port.write(bc)

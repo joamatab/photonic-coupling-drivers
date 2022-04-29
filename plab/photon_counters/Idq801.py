@@ -42,11 +42,11 @@ class Idq801(object):
         if clean_data_directory:
             self.clean_data_directory()
 
-        module_path = os.path.dirname(__file__) + "/"
+        module_path = f"{os.path.dirname(__file__)}/"
         if sys.platform == "linux":
-            self.idq801Lib = ct.CDLL(module_path + "libtdcbase.so")
+            self.idq801Lib = ct.CDLL(f"{module_path}libtdcbase.so")
         elif sys.platform == "win32":
-            self.idq801Lib = ct.CDLL(module_path + "./tdcbase.dll")
+            self.idq801Lib = ct.CDLL(f"{module_path}./tdcbase.dll")
         else:
             raise OSError("Invalid operating system")
 
@@ -130,8 +130,7 @@ class Idq801(object):
 
     def get_timebase(self):
         self.idq801Lib.TDC_getTimebase.restype = ct.c_double
-        tb = self.idq801Lib.TDC_getTimebase()
-        return tb
+        return self.idq801Lib.TDC_getTimebase()
 
     def get_mask_channels(self):
         cm, _, _ = self._get_device_params()
@@ -146,23 +145,16 @@ class Idq801(object):
 
     def get_enabled_channels(self):
         channels_status = self.get_status_channels()
-        channels_enabled = tuple(
-            i + 1 for i, v in enumerate(channels_status) if v == True
-        )
-        return channels_enabled
+        return tuple(i + 1 for i, v in enumerate(channels_status) if v == True)
 
     def get_disabled_channels(self):
         channels_status = self.get_status_channels()
-        channels_disabled = tuple(
-            i + 1 for i, v in enumerate(channels_status) if v == False
-        )
-        return channels_disabled
+        return tuple(i + 1 for i, v in enumerate(channels_status) if v == False)
 
     def is_channel_enabled(self, channel):
         assert 1 <= channel <= 8, "Invalid choice channel range."
         channel -= 1
-        channel_status = self.get_status_channels()[channel]
-        return channel_status
+        return self.get_status_channels()[channel]
 
     def _get_channel_mask(self, channel, set_unset):
         def channel_mask_from_channel_list(channels_enabled):
@@ -349,7 +341,7 @@ class Idq801(object):
         timestamps_masked = {
             str(c + 1): timestamps[c_m] for c, c_m in enumerate(channel_masks)
         }
-        timestamps_masked.update((k, v[v > 0]) for k, v in timestamps_masked.items())
+        timestamps_masked |= ((k, v[v > 0]) for k, v in timestamps_masked.items())
 
         last_counts = []
         if trim_time_s:
@@ -415,40 +407,39 @@ class Idq801(object):
         time_diff = timestamps["time_diff"]
         timestamps.pop("time_diff", None)
 
-        coin_counts = {}
         acc_counts = {}
 
-        # Get singles counts
-        for c in coin_channels:
-            if str(c) in timestamps:
-                coin_counts[str(c)] = len(timestamps[str(c)])
-            else:
-                coin_counts[str(c)] = 0
+        coin_counts = {
+            str(c): len(timestamps[str(c)]) if str(c) in timestamps else 0
+            for c in coin_channels
+        }
 
         coin_combinations = list(it.combinations(coin_channels, 2))
 
         for c in coin_combinations:
             # Get coincidence counts
             if str(c[0]) in timestamps and str(c[1]) in timestamps:
-                coin_counts[str(c[0]) + "/" + str(c[1])] = len(
+                coin_counts[f"{str(c[0])}/{str(c[1])}"] = len(
                     self._get_coins(timestamps[str(c[0])], timestamps[str(c[1])])
                 )
+
             else:
-                coin_counts[str(c[0]) + "/" + str(c[1])] = 0
+                coin_counts[f"{str(c[0])}/{str(c[1])}"] = 0
 
         if accidentals_delay_ns != None:
             accidentals_delay_bin = int(accidentals_delay_ns * 1e-9 / bin)
             for c in coin_combinations:
                 # Get accidental counts
                 if str(c[0]) in timestamps and str(c[1]) in timestamps:
-                    acc_counts[str(c[0]) + "/" + str(c[1])] = len(
+                    acc_counts[f"{str(c[0])}/{str(c[1])}"] = len(
                         self._get_coins(
                             timestamps[str(c[0])],
                             timestamps[str(c[1])] + accidentals_delay_bin,
                         )
                     )
+
                 else:
-                    acc_counts[str(c[0]) + "/" + str(c[1])] = 0
+                    acc_counts[f"{str(c[0])}/{str(c[1])}"] = 0
 
         return coin_counts, acc_counts, timestamps
 
@@ -490,8 +481,7 @@ class Idq801(object):
             )
 
             print(
-                "delay channel = %s, delay = %s ns, coin counts = %s"
-                % (scan_channel, d, int(coin_counts[idd]))
+                f"delay channel = {scan_channel}, delay = {d} ns, coin counts = {int(coin_counts[idd])}"
             )
 
         max_coin = np.max(coin_counts)
@@ -509,22 +499,19 @@ class Idq801(object):
         """
         time.sleep(self._wait_for_settings)
         clear_retrieved_timestamps = True
-        t = ThreadStoppable(
+        return ThreadStoppable(
             self.get_timestamps, seconds, True, args=(clear_retrieved_timestamps,)
         )
-        return t
 
     def write_timestamps_to_file(self):
         """Writes the timestamps in the buffer to a
         file.
         """
         timestamp_dir = "Timestamps"
-        if not os.path.isdir(self._data_directory + "/" + timestamp_dir):
-            os.mkdir(self._data_directory + "/" + timestamp_dir)
+        if not os.path.isdir(f"{self._data_directory}/{timestamp_dir}"):
+            os.mkdir(f"{self._data_directory}/{timestamp_dir}")
 
-        filename_prefix = (
-            self._data_directory + "/" + timestamp_dir + "/" + "timestamp_channel_"
-        )
+        filename_prefix = f"{self._data_directory}/{timestamp_dir}/timestamp_channel_"
         filenames = [filename_prefix + str(i) + ".dat" for i in range(1, 9)]
 
         for fn in filenames:
@@ -548,8 +535,7 @@ class Idq801(object):
         that can be stopped and started.
         """
         time.sleep(self._wait_for_settings)
-        t = ThreadStoppable(self.write_timestamps_to_file, seconds)
-        return t
+        return ThreadStoppable(self.write_timestamps_to_file, seconds)
 
     def get_counters(self):
         """Returns a list of the most recent value of
@@ -566,22 +552,21 @@ class Idq801(object):
         stopped and started.
         """
         time.sleep(self._wait_for_settings)
-        t = ThreadStoppable(self.get_counters, seconds, True)
-        return t
+        return ThreadStoppable(self.get_counters, seconds, True)
 
     def write_counters_to_file(self, filename="counters.dat"):
         """Writes the most recent values of the internal
         counters and coincidence counters to a file
         named `filename`.
         """
-        fn = self._data_directory + "/" + filename
+        fn = f"{self._data_directory}/{filename}"
         if not os.path.exists(fn):
             with open(fn, "w") as fs:
                 header = (
                     "1,2,3,4,5,6,7,8,1/2,1/3,1/4,2/3,2/4,3/4,"
                     "1/2/3,1/2/4,1/3/4,2/3/4,1/2/3/4"
                 )
-                fs.write("#" + header + "\n")
+                fs.write(f"#{header}" + "\n")
 
         counters = self.get_counters()
         counters_str = ",".join([str(c) for c in counters])
@@ -596,10 +581,9 @@ class Idq801(object):
         object that can be stopped and started.
         """
         time.sleep(self._wait_for_settings)
-        t = ThreadStoppable(
+        return ThreadStoppable(
             self.write_counters_to_file, seconds, False, args=(filename,)
         )
-        return t
 
     def _get_channel_delays(self):
         channels = range(8)

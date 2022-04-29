@@ -43,14 +43,12 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
             + "m"
         )
         self._write(cmd)
-        r = self.get_wavelength_m()
-        return r
+        return self.get_wavelength_m()
 
     def get_wavelength_m(self):
-        cmd = "sens1:chan" + str(self._channel_num) + ":pow:wav?"
+        cmd = f"sens1:chan{str(self._channel_num)}:pow:wav?"
         wl_m_str = self._query(cmd)
-        wl_m = float(wl_m_str)
-        return wl_m
+        return float(wl_m_str)
 
     def set_unit(self, unit):
         """
@@ -66,7 +64,7 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
                 Either \'W\' or \'dBm\'
         """
         assert unit.lower() in ("dbm", "w")
-        cmd = "sens1:chan" + str(self._channel_num) + ":pow:unit " + unit
+        cmd = f"sens1:chan{str(self._channel_num)}:pow:unit {unit}"
         self._write(cmd)
         r = self.get_unit()
         self._unit = unit.lower()
@@ -80,22 +78,18 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
             str: The unit the power meter is set to display.
                 Either \'W\' or \'dBm\'
         """
-        cmd = "sens1:chan" + str(self._channel_num) + ":pow:unit?"
+        cmd = f"sens1:chan{str(self._channel_num)}:pow:unit?"
         data = self._query(cmd)
         unit = int(data)
-        if unit == 0:
-            r = "dBm"
-        else:
-            r = "W"
-        return r
+        return "dBm" if unit == 0 else "W"
 
     def get_averaging_time_s(self):
-        cmd = "sens1:chan" + str(self._channel_num) + ":pow:atim?"
-        data = self._query(cmd)
-        return data
+        cmd = f"sens1:chan{str(self._channel_num)}:pow:atim?"
+        return self._query(cmd)
 
     def set_averaging_time_s(self, averaging_time_s):
-        cmd = "sens1:chan" + str(self._channel_num) + ":pow:atim %fs" % averaging_time_s
+        cmd = f"sens1:chan{str(self._channel_num)}" + ":pow:atim %fs" % averaging_time_s
+
         data = self._write(cmd)
         return self.get_averaging_time_s()
 
@@ -108,8 +102,7 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
                 `0` if auto-range is switched off.
         """
         self._write("sens1:pow:range:auto 1")
-        r = self.get_auto_range()
-        return r
+        return self.get_auto_range()
 
     def unset_auto_range(self):
         """
@@ -120,11 +113,10 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
                 `0` if auto-range is switched off.
         """
         self._write("sens1:pow:range:auto 0")
-        r = self.get_auto_range()
-        return r
+        return self.get_auto_range()
 
     def get_power_meter_range(self):
-        data = self.ask("sens1:chan" + str(self._channel_num) + ":pow:range?")
+        data = self.ask(f"sens1:chan{str(self._channel_num)}:pow:range?")
         return float(data)
 
     def set_power_meter_range(self, max_power_dbm):
@@ -147,5 +139,4 @@ class PowerMeterAgilent8164B(AgilentLightWaveConnection, pm.PowerMeter):
                 `0` if auto-range is switched off.
         """
         data = self._query("sens1:pow:range:auto?")
-        r = bool(int(data))
-        return r
+        return bool(int(data))
